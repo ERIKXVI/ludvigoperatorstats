@@ -1,0 +1,21 @@
+{
+  "player": {"nameOnPlatform": "Ludvig", "platformType": "uplay"},
+  "filters": {"seasonYear": "Y11S3", "modes": "all"},
+  "operators": {
+    "seasonYear": "Y11S3",
+    "seasonNumber": 43,
+    "platformType": "uplay",
+    "sessionType": "all",
+    "operators": [
+      {"operator": "Ash", "side": "Attacker", "roundsPlayed": 120, "winPercent": 55.0, "kd": 1.3, "headshotPercent": 48.0,
+       "wins": 66, "losses": 54, "kills": 104, "deaths": 80, "assists": 20, "aces": 1, "matchesPlayed": 30, "matchesWon": 17,
+       "matchesLost": 13, "matchWinPercent": 56.7, "headshots": 50, "firstBloods": 25, "firstDeaths": 18, "teamKills": 1,
+       "killsPerRound": 0.87, "deathsPerRound": 0.67, "timePlayed": "3h 10m", "timePlayedMs": 11400000,
+       "clutches": 3, "clutchesLost": 5, "kills1K": 40, "kills2K": 20, "kills3K": 6, "kills4K": 1, "kills5K": 1},
+      {"operator": "Jäger", "side": "Defender", "roundsPlayed": 90, "wins": 50, "losses": 40, "kills": 70, "deaths": 60,
+       "headshots": 30, "matchesPlayed": 25, "matchesWon": 14, "matchesLost": 11, "timePlayedMs": 9000000},
+      {"operator": "Nøkk", "side": null, "roundsPlayed": 10, "wins": 4, "losses": 6, "kills": 6, "deaths": 9, "headshots": 2},
+      {"operator": "Brandnew", "side": "Attacker", "roundsPlayed": 3, "wins": 1, "losses": 2, "kills": 2, "deaths": 3}
+    ]
+  }
+}

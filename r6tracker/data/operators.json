@@ -1,0 +1,812 @@
+[
+ {
+  "id": "ace",
+  "name": "Ace",
+  "role": "Attacker",
+  "org": "NIGHTHAVEN",
+  "squad": "NIGHTHAVEN",
+  "season": "Y5S2",
+  "country": "no",
+  "real_name": "Håvard Haugland"
+ },
+ {
+  "id": "alibi",
+  "name": "Alibi",
+  "role": "Defender",
+  "org": "GIS",
+  "squad": "VIPERSTRIKE",
+  "season": "Y3S2",
+  "country": "it",
+  "real_name": "Aria de Luca"
+ },
+ {
+  "id": "amaru",
+  "name": "Amaru",
+  "role": "Attacker",
+  "org": "APCA",
+  "squad": "REDHAMMER",
+  "season": "Y4S3",
+  "country": "pe",
+  "real_name": "Azucena Rocío Quispe"
+ },
+ {
+  "id": "aruni",
+  "name": "Aruni",
+  "role": "Defender",
+  "org": "NIGHTHAVEN",
+  "squad": "NIGHTHAVEN",
+  "season": "Y5S4",
+  "country": "th",
+  "real_name": "Apha Tawanroong"
+ },
+ {
+  "id": "ash",
+  "name": "Ash",
+  "role": "Attacker",
+  "org": "FBI SWAT",
+  "squad": "REDHAMMER",
+  "season": "Release",
+  "country": "us",
+  "real_name": "Eliza Cohen"
+ },
+ {
+  "id": "azami",
+  "name": "Azami",
+  "role": "Defender",
+  "org": "UNAFFILIATED",
+  "squad": "VIPERSTRIKE",
+  "season": "Y7S1",
+  "country": "jp",
+  "real_name": "Kana Fujiwara"
+ },
+ {
+  "id": "bandit",
+  "name": "Bandit",
+  "role": "Defender",
+  "org": "GSG 9",
+  "squad": "WOLFGUARD",
+  "season": "Release",
+  "country": "de",
+  "real_name": "Dominic Brunsmeier"
+ },
+ {
+  "id": "blackbeard",
+  "name": "Blackbeard",
+  "role": "Attacker",
+  "org": "NAVY SEAL",
+  "squad": "REDHAMMER",
+  "season": "Y1S2",
+  "country": "us",
+  "real_name": "Craig Jenson"
+ },
+ {
+  "id": "blitz",
+  "name": "Blitz",
+  "role": "Attacker",
+  "org": "GSG 9",
+  "squad": "VIPERSTRIKE",
+  "season": "Release",
+  "country": "de",
+  "real_name": "Elias Kötz"
+ },
+ {
+  "id": "brava",
+  "name": "Brava",
+  "role": "Attacker",
+  "org": "COT",
+  "squad": "VIPERSTRIKE",
+  "season": "Y8S1",
+  "country": "br",
+  "real_name": "Nayara Cardoso"
+ },
+ {
+  "id": "buck",
+  "name": "Buck",
+  "role": "Attacker",
+  "org": "JTF2",
+  "squad": "REDHAMMER",
+  "season": "Y1S1",
+  "country": "ca",
+  "real_name": "Sebastien Côté"
+ },
+ {
+  "id": "capitao",
+  "name": "Capitão",
+  "role": "Attacker",
+  "org": "BOPE",
+  "squad": "VIPERSTRIKE",
+  "season": "Y1S3",
+  "country": "br",
+  "real_name": "Vincente Souza"
+ },
+ {
+  "id": "castle",
+  "name": "Castle",
+  "role": "Defender",
+  "org": "FBI SWAT",
+  "squad": "WOLFGUARD",
+  "season": "Release",
+  "country": "us",
+  "real_name": "Miles Campbell"
+ },
+ {
+  "id": "caveira",
+  "name": "Caveira",
+  "role": "Defender",
+  "org": "BOPE",
+  "squad": "GHOSTEYES",
+  "season": "Y1S3",
+  "country": "br",
+  "real_name": "Taina Pereira"
+ },
+ {
+  "id": "clash",
+  "name": "Clash",
+  "role": "Defender",
+  "org": "GSUTR",
+  "squad": "WOLFGUARD",
+  "season": "Y3S3",
+  "country": "uk",
+  "real_name": "Morowa Evans"
+ },
+ {
+  "id": "deimos",
+  "name": "Deimos",
+  "role": "Attacker",
+  "org": "KERES LEGION",
+  "squad": "UNAFFILIATED",
+  "season": "Y9S1",
+  "country": "us",
+  "real_name": "Gerald Morris"
+ },
+ {
+  "id": "denari",
+  "name": "Denari",
+  "role": "Defender",
+  "org": "NIGHTHAVEN",
+  "squad": "NIGHTHAVEN",
+  "season": "Y10S3",
+  "country": "ch",
+  "real_name": "Leon Winzenried"
+ },
+ {
+  "id": "doc",
+  "name": "Doc",
+  "role": "Defender",
+  "org": "GIGN",
+  "squad": "WOLFGUARD",
+  "season": "Release",
+  "country": "fr",
+  "real_name": "Gustave Kateb"
+ },
+ {
+  "id": "dokkaebi",
+  "name": "Dokkaebi",
+  "role": "Attacker",
+  "org": "707th SMB",
+  "squad": "VIPERSTRIKE",
+  "season": "Y2S4",
+  "country": "sk",
+  "real_name": "Grace Nam"
+ },
+ {
+  "id": "echo",
+  "name": "Echo",
+  "role": "Defender",
+  "org": "SAT",
+  "squad": "VIPERSTRIKE",
+  "season": "Y1S4",
+  "country": "jp",
+  "real_name": "Masaru Enatsu"
+ },
+ {
+  "id": "ela",
+  "name": "Ela",
+  "role": "Defender",
+  "org": "GROM",
+  "squad": "NIGHTHAVEN",
+  "season": "Y2S3",
+  "country": "pl",
+  "real_name": "Elzbieta Bosak"
+ },
+ {
+  "id": "fenrir",
+  "name": "Fenrir",
+  "role": "Defender",
+  "org": "UNAFFILIATED",
+  "squad": "REDHAMMER",
+  "season": "Y8S2",
+  "country": "se",
+  "real_name": "Emil Svensson"
+ },
+ {
+  "id": "finka",
+  "name": "Finka",
+  "role": "Attacker",
+  "org": "CBRN THREAT UNIT",
+  "squad": "NIGHTHAVEN",
+  "season": "Y3S1",
+  "country": "ru",
+  "real_name": "Lera Melnikova"
+ },
+ {
+  "id": "flores",
+  "name": "Flores",
+  "role": "Attacker",
+  "org": "UNAFFILIATED",
+  "squad": "GHOSTEYES",
+  "season": "Y6S1",
+  "country": "ar",
+  "real_name": "Santiago Miguel Lucero"
+ },
+ {
+  "id": "frost",
+  "name": "Frost",
+  "role": "Defender",
+  "org": "JTF2",
+  "squad": "VIPERSTRIKE",
+  "season": "Y1S1",
+  "country": "ca",
+  "real_name": "Tina Lin Tsang"
+ },
+ {
+  "id": "fuze",
+  "name": "Fuze",
+  "role": "Attacker",
+  "org": "SPETSNAZ",
+  "squad": "REDHAMMER",
+  "season": "Release",
+  "country": "ru",
+  "real_name": "Shuhrat Kessikbayev"
+ },
+ {
+  "id": "glaz",
+  "name": "Glaz",
+  "role": "Attacker",
+  "org": "SPETSNAZ",
+  "squad": "GHOSTEYES",
+  "season": "Release",
+  "country": "ru",
+  "real_name": "Timur Glazkov"
+ },
+ {
+  "id": "goyo",
+  "name": "Goyo",
+  "role": "Defender",
+  "org": "FUERZAS ESPECIALES",
+  "squad": "REDHAMMER",
+  "season": "Y4S3",
+  "country": "mx",
+  "real_name": "César Ruiz Hernández"
+ },
+ {
+  "id": "gridlock",
+  "name": "Gridlock",
+  "role": "Attacker",
+  "org": "SASR",
+  "squad": "REDHAMMER",
+  "season": "Y4S1",
+  "country": "au",
+  "real_name": "Tori Tallyo Fairous"
+ },
+ {
+  "id": "grim",
+  "name": "Grim",
+  "role": "Attacker",
+  "org": "NIGHTHAVEN",
+  "squad": "NIGHTHAVEN",
+  "season": "Y7S3",
+  "country": "sg",
+  "real_name": "Charlie Tho Keng Boon"
+ },
+ {
+  "id": "hibana",
+  "name": "Hibana",
+  "role": "Attacker",
+  "org": "SAT",
+  "squad": "VIPERSTRIKE",
+  "season": "Y1S4",
+  "country": "jp",
+  "real_name": "Yumiko Imagawa"
+ },
+ {
+  "id": "iana",
+  "name": "Iana",
+  "role": "Attacker",
+  "org": "REU",
+  "squad": "GHOSTEYES",
+  "season": "Y5S1",
+  "country": "nl",
+  "real_name": "Nienke Meijer"
+ },
+ {
+  "id": "iq",
+  "name": "IQ",
+  "role": "Attacker",
+  "org": "GSG 9",
+  "squad": "NIGHTHAVEN",
+  "season": "Release",
+  "country": "de",
+  "real_name": "Monika Weiss"
+ },
+ {
+  "id": "jackal",
+  "name": "Jackal",
+  "role": "Attacker",
+  "org": "GEO",
+  "squad": "VIPERSTRIKE",
+  "season": "Y2S1",
+  "country": "es",
+  "real_name": "Ryad Ramirez Al-Hassar"
+ },
+ {
+  "id": "jager",
+  "name": "Jäger",
+  "role": "Defender",
+  "org": "GSG 9",
+  "squad": "VIPERSTRIKE",
+  "season": "Release",
+  "country": "de",
+  "real_name": "Marius Streicher"
+ },
+ {
+  "id": "kaid",
+  "name": "Kaid",
+  "role": "Defender",
+  "org": "GIGR",
+  "squad": "REDHAMMER",
+  "season": "Y3S4",
+  "country": "ma",
+  "real_name": "Jalal El Fassi"
+ },
+ {
+  "id": "kali",
+  "name": "Kali",
+  "role": "Attacker",
+  "org": "NIGHTHAVEN",
+  "squad": "NIGHTHAVEN",
+  "season": "Y4S4",
+  "country": "in",
+  "real_name": "Jaimini Kalimohan Shah"
+ },
+ {
+  "id": "kapkan",
+  "name": "Kapkan",
+  "role": "Defender",
+  "org": "SPETSNAZ",
+  "squad": "REDHAMMER",
+  "season": "Release",
+  "country": "ru",
+  "real_name": "Maxim Basuda"
+ },
+ {
+  "id": "lesion",
+  "name": "Lesion",
+  "role": "Defender",
+  "org": "SDU",
+  "squad": "GHOSTEYES",
+  "season": "Y2S3",
+  "country": "hk",
+  "real_name": "Liu Tze Long"
+ },
+ {
+  "id": "lion",
+  "name": "Lion",
+  "role": "Attacker",
+  "org": "CBRN THREAT UNIT",
+  "squad": "WOLFGUARD",
+  "season": "Y3S1",
+  "country": "fr",
+  "real_name": "Olivier Flament"
+ },
+ {
+  "id": "maestro",
+  "name": "Maestro",
+  "role": "Defender",
+  "org": "GIS",
+  "squad": "VIPERSTRIKE",
+  "season": "Y3S2",
+  "country": "it",
+  "real_name": "Adriano Martello"
+ },
+ {
+  "id": "maverick",
+  "name": "Maverick",
+  "role": "Attacker",
+  "org": "GSUTR",
+  "squad": "GHOSTEYES",
+  "season": "Y3S3",
+  "country": "us",
+  "real_name": "Erik Thorn"
+ },
+ {
+  "id": "melusi",
+  "name": "Melusi",
+  "role": "Defender",
+  "org": "INKABA TASK FORCE",
+  "squad": "WOLFGUARD",
+  "season": "Y5S2",
+  "country": "sa",
+  "real_name": "Thandiwe Ndlovu"
+ },
+ {
+  "id": "mira",
+  "name": "Mira",
+  "role": "Defender",
+  "org": "GEO",
+  "squad": "VIPERSTRIKE",
+  "season": "Y2S1",
+  "country": "es",
+  "real_name": "Elena Maria Alvarez del Manzano"
+ },
+ {
+  "id": "montagne",
+  "name": "Montagne",
+  "role": "Attacker",
+  "org": "GIGN",
+  "squad": "WOLFGUARD",
+  "season": "Release",
+  "country": "fr",
+  "real_name": "Gilles Touré"
+ },
+ {
+  "id": "mozzie",
+  "name": "Mozzie",
+  "role": "Defender",
+  "org": "SASR",
+  "squad": "GHOSTEYES",
+  "season": "Y4S1",
+  "country": "au",
+  "real_name": "Max Goose"
+ },
+ {
+  "id": "mute",
+  "name": "Mute",
+  "role": "Defender",
+  "org": "SAS",
+  "squad": "VIPERSTRIKE",
+  "season": "Release",
+  "country": "uk",
+  "real_name": "Mark Chandar"
+ },
+ {
+  "id": "nokk",
+  "name": "Nøkk",
+  "role": "Attacker",
+  "org": "JAEGER CORPS",
+  "squad": "GHOSTEYES",
+  "season": "Y4S2",
+  "country": "dk",
+  "real_name": "[REDACTED]"
+ },
+ {
+  "id": "nomad",
+  "name": "Nomad",
+  "role": "Attacker",
+  "org": "GIGR",
+  "squad": "WOLFGUARD",
+  "season": "Y3S4",
+  "country": "ma",
+  "real_name": "Sanaa El Maktoub"
+ },
+ {
+  "id": "oryx",
+  "name": "Oryx",
+  "role": "Defender",
+  "org": "UNAFFILIATED",
+  "squad": "REDHAMMER",
+  "season": "Y5S1",
+  "country": "jo",
+  "real_name": "Saif Al Hadid"
+ },
+ {
+  "id": "osa",
+  "name": "Osa",
+  "role": "Attacker",
+  "org": "NIGHTHAVEN",
+  "squad": "NIGHTHAVEN",
+  "season": "Y6S3",
+  "country": "hr",
+  "real_name": "Anja Katarina Janković"
+ },
+ {
+  "id": "pulse",
+  "name": "Pulse",
+  "role": "Defender",
+  "org": "FBI SWAT",
+  "squad": "NIGHTHAVEN",
+  "season": "Release",
+  "country": "us",
+  "real_name": "Jack Estrada"
+ },
+ {
+  "id": "ram",
+  "name": "Ram",
+  "role": "Attacker",
+  "org": "35th CB",
+  "squad": "REDHAMMER",
+  "season": "Y8S3",
+  "country": "kr",
+  "real_name": "Bo-Ram Choi"
+ },
+ {
+  "id": "rauora",
+  "name": "Rauora",
+  "role": "Attacker",
+  "org": "NZSAS",
+  "squad": "VIPERSTRIKE",
+  "season": "Y10S1",
+  "country": "nz",
+  "real_name": "Hāpai Iwini"
+ },
+ {
+  "id": "recruit_blue",
+  "name": "Recruit (Blue)",
+  "role": "Recruit",
+  "org": "RECRUIT",
+  "squad": "RECRUIT",
+  "season": null,
+  "country": null,
+  "real_name": null
+ },
+ {
+  "id": "recruit_green",
+  "name": "Recruit (Green)",
+  "role": "Recruit",
+  "org": "RECRUIT",
+  "squad": "RECRUIT",
+  "season": null,
+  "country": null,
+  "real_name": null
+ },
+ {
+  "id": "recruit_orange",
+  "name": "Recruit (Orange)",
+  "role": "Recruit",
+  "org": "RECRUIT",
+  "squad": "RECRUIT",
+  "season": null,
+  "country": null,
+  "real_name": null
+ },
+ {
+  "id": "recruit_red",
+  "name": "Recruit (Red)",
+  "role": "Recruit",
+  "org": "RECRUIT",
+  "squad": "RECRUIT",
+  "season": null,
+  "country": null,
+  "real_name": null
+ },
+ {
+  "id": "recruit_yellow",
+  "name": "Recruit (Yellow)",
+  "role": "Recruit",
+  "org": "RECRUIT",
+  "squad": "RECRUIT",
+  "season": null,
+  "country": null,
+  "real_name": null
+ },
+ {
+  "id": "rook",
+  "name": "Rook",
+  "role": "Defender",
+  "org": "GIGN",
+  "squad": "VIPERSTRIKE",
+  "season": "Release",
+  "country": "fr",
+  "real_name": "Julien Nizan"
+ },
+ {
+  "id": "sens",
+  "name": "Sens",
+  "role": "Attacker",
+  "org": "SFG",
+  "squad": "WOLFGUARD",
+  "season": "Y7S2",
+  "country": "be",
+  "real_name": "Néon Ngoma Mutombo"
+ },
+ {
+  "id": "sentry",
+  "name": "Sentry",
+  "role": "Defender",
+  "org": "ROS",
+  "squad": "none",
+  "season": "Y9S2",
+  "country": "none",
+  "real_name": "Undefined"
+ },
+ {
+  "id": "skopos",
+  "name": "Skopós",
+  "role": "Defender",
+  "org": "EKAM",
+  "squad": "WOLFGUARD",
+  "season": "Y9S3",
+  "country": "gr",
+  "real_name": "Kure Galanos"
+ },
+ {
+  "id": "sledge",
+  "name": "Sledge",
+  "role": "Attacker",
+  "org": "SAS",
+  "squad": "REDHAMMER",
+  "season": "Release",
+  "country": "uk",
+  "real_name": "Seamus Cowden"
+ },
+ {
+  "id": "smoke",
+  "name": "Smoke",
+  "role": "Defender",
+  "org": "SAS",
+  "squad": "REDHAMMER",
+  "season": "Release",
+  "country": "uk",
+  "real_name": "James Porter"
+ },
+ {
+  "id": "solis",
+  "name": "Solis",
+  "role": "Defender",
+  "org": "AFEAU",
+  "squad": "GHOSTEYES",
+  "season": "Y7S4",
+  "country": "co",
+  "real_name": "Ana Valentina Díaz"
+ },
+ {
+  "id": "striker",
+  "name": "Striker",
+  "role": "Attacker",
+  "org": "ROS",
+  "squad": "none",
+  "season": "Y9S2",
+  "country": "none",
+  "real_name": "Undefined"
+ },
+ {
+  "id": "tachanka",
+  "name": "Tachanka",
+  "role": "Defender",
+  "org": "SPETSNAZ",
+  "squad": "REDHAMMER",
+  "season": "Release",
+  "country": "ru",
+  "real_name": "Alexandr Senaviev"
+ },
+ {
+  "id": "thatcher",
+  "name": "Thatcher",
+  "role": "Attacker",
+  "org": "SAS",
+  "squad": "VIPERSTRIKE",
+  "season": "Release",
+  "country": "uk",
+  "real_name": "Mike Baker"
+ },
+ {
+  "id": "thermite",
+  "name": "Thermite",
+  "role": "Attacker",
+  "org": "FBI SWAT",
+  "squad": "REDHAMMER",
+  "season": "Release",
+  "country": "us",
+  "real_name": "Jordan Trace"
+ },
+ {
+  "id": "thorn",
+  "name": "Thorn",
+  "role": "Defender",
+  "org": "EMERGENCY RESPONSE UNIT",
+  "squad": "REDHAMMER",
+  "season": "Y6S4",
+  "country": "ie",
+  "real_name": "Brianna Skehan"
+ },
+ {
+  "id": "thunderbird",
+  "name": "Thunderbird",
+  "role": "Defender",
+  "org": "STAR-NET AVIATION",
+  "squad": "WOLFGUARD",
+  "season": "Y6S2",
+  "country": "ca",
+  "real_name": "Mina Sky"
+ },
+ {
+  "id": "tubarao",
+  "name": "Tubarão",
+  "role": "Defender",
+  "org": "DAE",
+  "squad": "WOLFGUARD",
+  "season": "Y8S4",
+  "country": "pt",
+  "real_name": "Isaac Nunes Oliveira"
+ },
+ {
+  "id": "twitch",
+  "name": "Twitch",
+  "role": "Attacker",
+  "org": "GIGN",
+  "squad": "WOLFGUARD",
+  "season": "Release",
+  "country": "fr",
+  "real_name": "Emmanuelle Pichon"
+ },
+ {
+  "id": "valkyrie",
+  "name": "Valkyrie",
+  "role": "Defender",
+  "org": "NAVY SEALS",
+  "squad": "GHOSTEYES",
+  "season": "Y1S2",
+  "country": "us",
+  "real_name": "Meghan J. Castellano"
+ },
+ {
+  "id": "vigil",
+  "name": "Vigil",
+  "role": "Defender",
+  "org": "707th SMB",
+  "squad": "GHOSTEYES",
+  "season": "Y2S4",
+  "country": "sk",
+  "real_name": "Chul Kyung Hwa"
+ },
+ {
+  "id": "wamai",
+  "name": "Wamai",
+  "role": "Defender",
+  "org": "NIGHTHAVEN",
+  "squad": "NIGHTHAVEN",
+  "season": "Y4S4",
+  "country": "ke",
+  "real_name": "Ngũgĩ Muchoki Furaha"
+ },
+ {
+  "id": "warden",
+  "name": "Warden",
+  "role": "Defender",
+  "org": "SECRET SERVICE",
+  "squad": "GHOSTEYES",
+  "season": "Y4S2",
+  "country": "us",
+  "real_name": "Collinn McKinley"
+ },
+ {
+  "id": "ying",
+  "name": "Ying",
+  "role": "Attacker",
+  "org": "SDU",
+  "squad": "WOLFGUARD",
+  "season": "Y2S3",
+  "country": "hk",
+  "real_name": "Siu Mei Lin"
+ },
+ {
+  "id": "zero",
+  "name": "Zero",
+  "role": "Attacker",
+  "org": "ROS",
+  "squad": "GHOSTEYES",
+  "season": "Y5S3",
+  "country": "us",
+  "real_name": "Samuel Leo Fisher"
+ },
+ {
+  "id": "zofia",
+  "name": "Zofia",
+  "role": "Attacker",
+  "org": "GROM",
+  "squad": "GHOSTEYES",
+  "season": "Y2S4",
+  "country": "pl",
+  "real_name": "Zofia Bosak"
+ }
+]

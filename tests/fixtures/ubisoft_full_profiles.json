@@ -1,0 +1,51 @@
+{
+  "platform_families_full_profiles": [
+    {
+      "platform_family": "pc",
+      "board_ids_full_profiles": [
+        {
+          "board_id": "ranked",
+          "full_profiles": [
+            {
+              "profile": {
+                "board_id": "ranked",
+                "id": "11111111-2222-3333-4444-555555555555",
+                "max_rank": 28,
+                "max_rank_points": 3812,
+                "platform_family": "pc",
+                "rank": 27,
+                "rank_points": 3755,
+                "season_id": 43,
+                "top_rank_position": 0
+              },
+              "season_statistics": {
+                "deaths": 410,
+                "kills": 468,
+                "match_outcomes": {"abandons": 1, "losses": 30, "wins": 34}
+              }
+            }
+          ]
+        },
+        {
+          "board_id": "standard",
+          "full_profiles": [
+            {
+              "profile": {"board_id": "standard", "max_rank": 0, "max_rank_points": 0, "rank": 0, "rank_points": 0, "season_id": 43, "top_rank_position": 0},
+              "season_statistics": {"deaths": 120, "kills": 150, "match_outcomes": {"abandons": 0, "losses": 9, "wins": 11}}
+            }
+          ]
+        },
+        {
+          "board_id": "living_game_mode",
+          "full_profiles": [
+            {
+              "profile": {"board_id": "living_game_mode", "rank": 0, "rank_points": 0, "season_id": 43},
+              "season_statistics": {"deaths": 5, "kills": 9, "match_outcomes": {"abandons": 0, "losses": 1, "wins": 1}}
+            }
+          ]
+        },
+        {"board_id": "warmup", "full_profiles": []}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "player": {"nameOnPlatform": "Ludvig", "platformType": "uplay", "platformFamilies": "pc"},
+  "stats": {
+    "platform_families_full_profiles": [
+      {
+        "profile_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+        "board_ids_full_profiles": [
+          {
+            "board_id": "ranked",
+            "full_profiles": [
+              {"season_id": 42, "profile": {"rank": 20, "rank_points": 2950, "max_rank": 21, "max_rank_points": 3001,
+               "kills": 300, "deaths": 310, "wins": 20, "losses": 25, "abandon": 0, "update_time": "2026-07-01T00:00:00Z"},
+               "season_statistics": {"kills": 300, "deaths": 310, "match_outcomes": {"wins": 20, "losses": 25, "abandons": 0}}},
+              {"season_id": 43, "profile": {"rank": 27, "rank_points": 3755, "max_rank": 28, "max_rank_points": 3812,
+               "kills": 468, "deaths": 410, "wins": 34, "losses": 30, "abandon": 1, "update_time": "2026-10-27T00:00:00Z"}}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "account": {"level": 287, "xp": 1234, "profilePicture": null, "profile": {"level": 287, "xp": 1234}, "profiles": []},
+  "banned": {"username": "Ludvig", "platform": "uplay", "isBanned": false, "banAlerts": []},
+  "seasons": null,
+  "history": null,
+  "meta": {"included": ["stats", "account", "banned"], "partial": true, "errors": {"seasons": "unavailable"}}
+}
