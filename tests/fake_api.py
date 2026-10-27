@@ -33,18 +33,21 @@ class FakeApis:
         self.cloudflare_block = False
         self.no_match_history = False
         self.matches_down = False
+        self.missing_page: int | None = None  # this page of match history answers 404
+        self.redirect = False  # answer with a redirect to another path that records what it receives
+        self.leaked: list[str | None] = []
         self.next_id = 100
 
     # ---- helpers the tests use to "play"
     def play_match(self, *, won: bool, kills: int, deaths: int, rp: int, map_name: str = "Clubhouse",
-                   operators: tuple[str, ...] = ("Ash", "Jäger"), minutes_ago: int = 1) -> str:
+                   operators: tuple[str, ...] = ("Ash", "Jäger"), minutes_ago: int = 0) -> str:
         """Add a new ranked match on top of the match history and bump the season stats like the game would."""
         tmpl = copy.deepcopy(self.matches["data"]["matches"][0])
         self.next_id += 1
         match_id = f"00000000-0000-0000-0000-{self.next_id:012d}"
-        start = datetime.now(timezone.utc) - timedelta(minutes=minutes_ago + 25)
+        end = datetime.now(timezone.utc) - timedelta(minutes=minutes_ago)
         tmpl["attributes"]["id"] = match_id
-        tmpl["metadata"]["timestamp"] = start.isoformat(timespec="milliseconds")
+        tmpl["metadata"]["timestamp"] = end.isoformat(timespec="milliseconds")  # R6 Tracker: when it ended
         tmpl["metadata"]["duration"] = 24 * 60 * 1000
         tmpl["metadata"]["sessionMapName"] = map_name
         seg = tmpl["segments"][0]
@@ -81,12 +84,15 @@ class FakeApis:
         app.router.add_get(TRN_PREFIX + "/profile/{slug}/{who}", self.trn_profile)
         app.router.add_get(TRN_PREFIX + "/profile/{slug}/{who}/segments/operator", self.trn_operators)
         app.router.add_get(TRN_PREFIX + "/matches/{slug}/{who}", self.trn_matches)
+        app.router.add_get("/elsewhere", self.elsewhere)
         app.router.add_get("/r6/api/v2/operators", self.arenyze_operators)
         app.router.add_get("/r6/api/v2/profile", self.arenyze_profile)
         return app
 
     def _gate(self, request: web.Request):
         self.requests.append(f"{request.path}?{request.query_string}")
+        if self.redirect:
+            return web.Response(status=301, headers={"Location": "/elsewhere"})
         if self.cloudflare_block:
             return web.Response(status=403, text="<html><body>Just a moment...</body></html>", content_type="text/html")
         key = request.headers.get("TRN-Api-Key")
@@ -99,10 +105,22 @@ class FakeApis:
         who = request.match_info["who"]
         if request.match_info["slug"] not in ("ubi", "psn", "xbl"):
             return web.json_response({"errors": [{"code": "CollectorResultStatus::InvalidPlatform"}]}, status=400)
-        if who.lower() != self.name.lower() and who != USER_ID:
+        current_id = self.profile["data"]["platformInfo"]["platformUserId"]
+        if who.lower() != self.name.lower() and who != current_id:
             return web.json_response({"errors": [{"code": "CollectorResultStatus::NotFound",
                                                   "message": "This profile could not be found."}]}, status=404)
         return None
+
+    async def elsewhere(self, request: web.Request):
+        self.leaked.append(request.headers.get("TRN-Api-Key"))
+        return web.json_response({"data": {}})
+
+    def give_name_to(self, other_id: str) -> None:
+        """The name 'Ludvig' now belongs to a different Ubisoft account (with different matches)."""
+        self.profile["data"]["platformInfo"]["platformUserId"] = other_id
+        self.matches["data"]["requestingPlayerAttributes"]["playerId"] = other_id
+        for i, m in enumerate(self.matches["data"]["matches"]):
+            m["attributes"]["id"] = f"other-{i}"
 
     async def trn_profile(self, request: web.Request):
         return self._gate(request) or web.json_response(copy.deepcopy(self.profile))
@@ -122,6 +140,8 @@ class FakeApis:
         if self.matches_down:
             return web.json_response({"errors": [{"code": "Internal", "message": "boom"}]}, status=500)
         page = int(request.query.get("next", 0))
+        if page == self.missing_page:
+            return web.json_response({"message": "Not Found"}, status=404)
         all_matches = self.matches["data"]["matches"]
         body = copy.deepcopy(self.matches)
         body["data"]["matches"] = all_matches[page * 20:(page + 1) * 20]

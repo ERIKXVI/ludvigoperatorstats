@@ -23,7 +23,6 @@ class StatsFetcher:
             raise ValueError("A stats source is needed")
         self.trn = trn
         self.arenyze = None if trn else arenyze
-        self._no_match_history = False
 
     @classmethod
     def from_settings(cls, settings: Settings, session: aiohttp.ClientSession) -> "StatsFetcher":
@@ -42,7 +41,8 @@ class StatsFetcher:
 
     @property
     def has_matches(self) -> bool:
-        return self.trn is not None and not self._no_match_history
+        """Whether the source has match history at all (per-player trouble is handled by the tracker)."""
+        return self.trn is not None
 
     async def find_player(self, name: str, platform: str = "uplay") -> PlayerInfo:
         if self.trn:
@@ -76,13 +76,16 @@ class StatsFetcher:
         return await self.arenyze.operators(player, season, mode)
 
     async def matches(self, player: PlayerInfo, cursor: int | None = None) -> tuple[list[MatchBatch], int | None] | None:
-        """A page of real matches, or None when the source has no match history."""
-        if not self.has_matches:
+        """A page of real matches, or None when the source has no match history.
+
+        Raises EndpointUnavailable when the first page isn't there (the tracker decides what that means
+        for this player); a later page that isn't there is just the end of the readable history."""
+        if not self.trn:
             return None
-        assert self.trn
         try:
             return await self.trn.matches(player, cursor)
         except EndpointUnavailable as e:
-            log.warning("No match history available (%s); working matches out from the totals instead.", e)
-            self._no_match_history = True
-            return None
+            if cursor is None:
+                raise
+            log.warning("Match history page %s isn't available (%s); stopping there.", cursor, e)
+            return [], None

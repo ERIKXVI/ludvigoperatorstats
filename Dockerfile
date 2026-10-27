@@ -5,7 +5,7 @@ COPY pyproject.toml README.md ./
 COPY r6tracker ./r6tracker
 RUN pip install --no-cache-dir .
 
-# The SQLite database and Ubisoft session cache live here; mount a volume to keep them.
+# The SQLite database lives here; mount a volume to keep it.
 ENV DATA_DIR=/app/data
 VOLUME /app/data
 

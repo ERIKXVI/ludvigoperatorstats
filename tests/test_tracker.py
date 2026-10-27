@@ -1,9 +1,9 @@
 import asyncio
 from datetime import timedelta
 
-from conftest import back_in_time, board
+from conftest import FakeFetcher, back_in_time, board
 
-from r6tracker.models import OperatorStats
+from r6tracker.models import OperatorStats, PlayerInfo
 from r6tracker.sources import SourceError
 from r6tracker.tracker import Tracker, diff_boards
 
@@ -230,6 +230,7 @@ def test_new_real_matches_are_detected_once(storage, fetcher):
     fetcher.boards = {"ranked": ranked()}
     fetcher.history = [real_match(0, minutes_ago=120)]
     tp, _ = run(tr.add_player("Ludvig"))
+    back_in_time(storage, tp.id, 60)  # we started watching an hour ago
 
     fetcher.history = [real_match(2, minutes_ago=2, won=False), real_match(1, minutes_ago=30)] + fetcher.history
     fetcher.boards = {"ranked": ranked(wins=11, losses=9)}  # totals moved too; must NOT double count
@@ -252,6 +253,7 @@ def test_catching_up_reads_more_pages(storage, fetcher):
     fetcher.boards = {"ranked": ranked()}
     fetcher.history = [real_match(0, minutes_ago=600)]
     tp, _ = run(tr.add_player("Ludvig"))
+    back_in_time(storage, tp.id, 590)
     fetcher.history = [real_match(n, minutes_ago=600 - n * 30) for n in range(5, 0, -1)] + fetcher.history
     res = run(tr.poll(tp))
     assert [b.match_id for b in res.batches] == ["m1", "m2", "m3", "m4", "m5"]  # 3 pages, oldest first
@@ -265,6 +267,7 @@ def test_match_history_errors_dont_fall_back_to_totals(storage, fetcher):
     fetcher.boards = {"ranked": ranked()}
     fetcher.history = [real_match(0)]
     tp, _ = run(tr.add_player("Ludvig"))
+    back_in_time(storage, tp.id, 10)
     fetcher.matches_error = SourceError("R6 Tracker hiccup")
     fetcher.boards = {"ranked": ranked(wins=11)}
     res = run(tr.poll(tp))
@@ -283,3 +286,119 @@ def test_without_match_history_totals_are_used(storage, fetcher):
     fetcher.boards = {"ranked": ranked(wins=11)}
     res = run(tr.poll(tp))
     assert not res.real_matches and [(b.matches, b.match_id) for b in res.batches] == [(1, None)]
+
+
+# ------------------------------------------------- review regressions
+
+
+def test_switching_from_totals_to_match_history_doesnt_double_count(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    tp, _ = run(tr.add_player("Ludvig"))  # older version / backup source: no match history
+    back_in_time(storage, tp.id, 120)
+    fetcher.boards = {"ranked": ranked(wins=13)}
+    [diff] = run(tr.poll(tp)).batches  # 3 matches noticed from the totals
+    back_in_time(storage, tp.id, 30)
+    assert storage.count_tracked_matches(tp.id) == 3
+
+    # Now match history is available and lists those same 3 matches, plus one played since.
+    fetcher.history = [real_match(9, minutes_ago=5)] + [real_match(n, minutes_ago=40 + n * 20) for n in range(3)]
+    res = run(tr.poll(tp))
+    assert res.real_matches and [b.match_id for b in res.batches + res.backfilled] == ["m9"]
+    assert storage.count_tracked_matches(tp.id) == 4
+
+
+def test_empty_first_look_still_counts_as_the_baseline(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = []  # nothing on R6 Tracker yet
+    tp, _ = run(tr.add_player("Ludvig"))
+    fetcher.history = [real_match(1, minutes_ago=0)]
+    assert [b.match_id for b in run(tr.poll(tp)).batches] == ["m1"]  # announced, not swallowed
+
+
+def test_history_that_stays_empty_falls_back_to_totals(storage, fetcher):
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = []
+    tp, _ = run(tr.add_player("Ludvig"))
+    back_in_time(storage, tp.id, 30)
+    fetcher.boards = {"ranked": ranked(wins=11)}
+    res = run(tr.poll(tp))
+    assert not res.real_matches and [(b.matches, b.match_id) for b in res.batches] == [(1, None)]
+
+
+def test_missing_history_for_one_player_is_per_player_and_retried(storage, fetcher):
+    from conftest import real_match
+
+    from r6tracker.sources import EndpointUnavailable
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = [real_match(0, minutes_ago=200)]
+    fetcher.matches_error = EndpointUnavailable("404")
+    tp, first = run(tr.add_player("Ludvig"))
+    assert not first.real_matches and tp.id in tr._no_history_until
+    calls = fetcher.matches_calls
+    run(tr.poll(tp))
+    assert fetcher.matches_calls == calls  # not asked again until the retry time
+    other = storage.add_player(PlayerInfo("Bob", user_id="b"))
+    fetcher.matches_error = None
+    assert run(tr.poll(other)).real_matches  # other players are unaffected
+
+
+def test_session_running_when_tracking_starts_is_summarised_in_full(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher, session_gap=timedelta(minutes=45))
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = [real_match(n, minutes_ago=5 + n * 30) for n in range(3)]  # 3 already played
+    tp, first = run(tr.add_player("Ludvig"))
+    assert len(first.backfilled) == 3 and all(b.season_id == 0 for b in first.backfilled)  # season unknown
+    fetcher.history = [real_match(4, minutes_ago=0), real_match(3, minutes_ago=0)] + fetcher.history
+    assert len(run(tr.poll(tp)).batches) == 2
+    back_in_time(storage, tp.id, 120)
+    done = tr.finished_session(tp)
+    assert done is not None and done.matches == 5 == tr.last_session(tp)[0].matches
+
+
+def test_old_finished_session_isnt_announced(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = [real_match(n, minutes_ago=600 + n * 20) for n in range(3)]
+    tp, _ = run(tr.add_player("Ludvig"))
+    assert tr.finished_session(tp) is None
+
+
+def test_source_change_doesnt_mix_playlists(storage, fetcher):
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked(), "casual": board("casual", wins=40)}
+    tp, _ = run(tr.add_player("Ludvig"))
+    back_in_time(storage, tp.id, 30)
+
+    async def profile_from_other_source(player):
+        snap = await FakeFetcher.profile(fetcher, player)
+        snap.sources = ["Other"]
+        return snap
+
+    fetcher.profile = profile_from_other_source
+    fetcher.boards = {"ranked": ranked(), "quick_match": board("quick_match", wins=40)}
+    res = run(tr.poll(tp))
+    assert set(res.snapshot.boards) == {"ranked", "quick_match"} and not res.batches
+
+
+def test_tracked_count_starts_when_tracking_began(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = [real_match(n, minutes_ago=100 + n) for n in range(4)]
+    tp, _ = run(tr.add_player("Ludvig"))
+    tp = storage.get_player(tp.id)
+    assert storage.count_tracked_matches(tp.id) == 4 and storage.count_tracked_matches(tp.id, since=tp.added_at) == 0

@@ -147,7 +147,7 @@ class StatsCog(commands.Cog):
         tp = self._player(player)
         snap = self._latest(tp)
         embed = embeds.stats_embed(
-            tp, snap, self.bot.tracker.today(tp, self.tz), self.bot.storage.count_tracked_matches(tp.id), self.tz
+            tp, snap, self.bot.tracker.today(tp, self.tz), self.bot.storage.count_tracked_matches(tp.id, since=tp.added_at), self.tz
         )
         await interaction.response.send_message(embed=embed, view=complaint_view(tp))
 
@@ -271,7 +271,7 @@ class StatsCog(commands.Cog):
         snap = result.snapshot
         assert snap is not None
         embed = embeds.stats_embed(
-            tp, snap, self.bot.tracker.today(tp, self.tz), self.bot.storage.count_tracked_matches(tp.id), self.tz
+            tp, snap, self.bot.tracker.today(tp, self.tz), self.bot.storage.count_tracked_matches(tp.id, since=tp.added_at), self.tz
         )
         await interaction.followup.send("No new matches since the last check.", embed=embed, view=complaint_view(tp))
 
@@ -300,7 +300,8 @@ class StatsCog(commands.Cog):
                 f"Tracking **{tp.name}**, but the first stats fetch failed: {result.error}. I'll keep trying."
             )
             return
-        embed = embeds.stats_embed(tp, result.snapshot, self.bot.tracker.today(tp, self.tz), 0, self.tz)
+        tracked = self.bot.storage.count_tracked_matches(tp.id, since=tp.added_at)
+        embed = embeds.stats_embed(tp, result.snapshot, self.bot.tracker.today(tp, self.tz), tracked, self.tz)
         await interaction.followup.send(
             f"👀 Now tracking **{tp.name}**. New matches show up within ~{self.bot.settings.poll_interval_minutes:g} min.",
             embed=embed, view=complaint_view(tp),

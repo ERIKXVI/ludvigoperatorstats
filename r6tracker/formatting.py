@@ -65,6 +65,8 @@ def rank_line(b: BoardStats) -> str:
 def rank_change(b: MatchBatch) -> str:
     before, after = rank_name(b.rank_before), rank_name(b.rank_after)
     move = f"{before} → **{after}**" if before != after else f"**{after}**"
+    if not b.rp_known:
+        return f"{move} ({b.rp_after:,} RP)"
     return f"{move} ({signed(b.rp_change)} RP, now {b.rp_after:,})"
 
 

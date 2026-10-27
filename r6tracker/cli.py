@@ -111,7 +111,7 @@ def print_snapshot(app: App, tp: TrackedPlayer) -> None:
     today = app.tracker.today(tp, tz)
     print(f"\nTracked today: {plural(today.matches, 'match', 'matches')}" + (f" ({wl(today.wins, today.losses, today.abandons)}, K/D {today.kd:.2f})" if today.matches else ""))
     print(f"Tracked since {local(tp.added_at, tz, '%d %b %Y')}: "
-          f"{plural(app.storage.count_tracked_matches(tp.id), 'match', 'matches')}")
+          f"{plural(app.storage.count_tracked_matches(tp.id, since=tp.added_at), 'match', 'matches')}")
     counts = app.storage.complaint_counts(tp.id)
     if any(counts.values()):
         print(f"Complaints logged: {counts['complaint']} · arguments: {counts['argument']}")
@@ -306,7 +306,7 @@ async def cmd_matches(settings: Settings, args) -> None:
             score = f"{e.rounds_won}-{e.rounds_lost}" if e.rounds_won or e.rounds_lost else ""
             line = (f"{local(e.detected_at, app.settings.tz)}  {e.label:<12} {e.result_text:<8} {(e.map_name or ''):<14}"
                     f"{score:>5} {e.kills:>3}/{e.deaths:<3}")
-            if e.board == "ranked" and (e.rp_before or e.rp_after):
+            if e.board == "ranked" and (e.rp_before or e.rp_after) and e.rp_known:
                 line += f"  {e.rp_change:+d} RP"
             if e.operators:
                 line += f"  {', '.join(e.operators)}"

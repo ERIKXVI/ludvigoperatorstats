@@ -116,7 +116,10 @@ def snapshot_from_profile(payload: Any, platform: str) -> Snapshot:
     snap = Snapshot(player=player_from_profile(payload, platform))
     snap.level = _int_or_none(meta.get("clearanceLevel"))
     snap.battle_pass_level = _int_or_none(meta.get("battlepassLevel"))
-    snap.name_changes = [c.get("name") for c in meta.get("nameChanges") or [] if isinstance(c, dict) and c.get("name")]
+    changes = [c for c in meta.get("nameChanges") or [] if isinstance(c, dict) and c.get("name")]
+    oldest = datetime.min.replace(tzinfo=timezone.utc)
+    changes.sort(key=lambda c: parse_time(c.get("timestamp")) or oldest, reverse=True)  # newest first
+    snap.name_changes = [c["name"] for c in changes]
     bans = meta.get("banAlerts")
     if isinstance(bans, list):
         snap.banned = bool(bans)
@@ -135,9 +138,12 @@ def snapshot_from_profile(payload: Any, platform: str) -> Snapshot:
             abandons=count(st, "matchesAbandoned"),
             name="Lifetime",
         )
+        hs, kills = num(st, "headshots"), num(st, "kills")
         extras = {
-            "headshots": num(st, "headshots"),
-            "headshot_pct": num(st, "headshotPercentage", "headshotPct"),
+            "headshots": hs,
+            # % of kills, like everywhere else in the bot. (headshotPercentage is headshot *accuracy*:
+            # headshots / (headshots + headshotsMissed).)
+            "headshot_pct": round(100 * hs / kills, 2) if hs and kills else num(st, "headshotPct"),
             "assists": num(st, "assists"),
             "team_kills": num(st, "teamKills"),
             "wallbangs": num(st, "wallbangs"),
@@ -218,9 +224,7 @@ def parse_operators(payload: Any) -> list[OperatorStats]:
         name = opmeta.display_name(str(raw))
         st = e.get("stats") or {}
         kills = count(st, "kills")
-        headshots = count(st, "headshots") if _node(st, "headshots") else round(
-            num(st, "headshotPct", "headshotPercentage") * kills / 100
-        )
+        headshots = count(st, "headshots") if _node(st, "headshots") else round(num(st, "headshotPct") * kills / 100)
         side = str(attrs.get("side") or "").lower()
         ops.append(
             OperatorStats(
@@ -252,6 +256,14 @@ def parse_operators(payload: Any) -> list[OperatorStats]:
 # ----------------------------------------------------------------- matches
 
 
+def requesting_player_id(payload: Any) -> str | None:
+    """The Ubisoft id a /matches response is about (to make sure it's the right account)."""
+    data = _data(payload)
+    if isinstance(data, dict):
+        return (data.get("requestingPlayerAttributes") or {}).get("playerId")
+    return None
+
+
 def parse_matches(payload: Any, player: PlayerInfo) -> tuple[list[MatchBatch], int | None]:
     """/matches/{platform}/{name}: one page of real matches (newest first) and the next-page cursor."""
     data = _data(payload) or {}
@@ -264,6 +276,17 @@ def parse_matches(payload: Any, player: PlayerInfo) -> tuple[list[MatchBatch], i
             b = _match(m, me, player.name)
             if b:
                 out.append(b)
+    # Sometimes the "previous" RP/rank of a match is null. The next older match on the same
+    # playlist ended where this one started, so take it from there.
+    for i, b in enumerate(out):
+        older = next((o for o in out[i + 1:] if o.board == b.board), None)
+        if older is None:
+            continue
+        if b.extra.get("rp_unknown"):
+            b.rp_before = older.rp_after
+            del b.extra["rp_unknown"]
+        if b.extra.pop("rank_unknown", False):
+            b.rank_before = older.rank_after
     cursor = (data.get("metadata") or {}).get("next")
     return out, cursor if isinstance(cursor, int) and not isinstance(cursor, bool) else None
 
@@ -292,9 +315,16 @@ def _match(m: dict, me: str | None, name: str) -> MatchBatch | None:
         wins, losses = int(result == "win" or smeta.get("hasWon") is True), int(result == "loss")
         abandons = int(not wins and not losses)
     duration = int((meta.get("duration") or 0) / 1000) or seconds(st, "timePlayed")
-    start = parse_time(meta.get("timestamp")) or utcnow()
+    # metadata.timestamp is when the match ENDED: back-to-back matches only line up (no overlaps) that way.
+    end = parse_time(meta.get("timestamp")) or utcnow()
     rp_after = count(st, "rankPoints")
-    rp_before = count(st, "rankPointsPrevious") if _node(st, "rankPointsPrevious") else rp_after - count(st, "rankPointsDelta")
+    if _node(st, "rankPointsPrevious"):
+        rp_before, rp_known = count(st, "rankPointsPrevious"), True
+    elif _node(st, "rankPointsDelta"):
+        rp_before, rp_known = rp_after - count(st, "rankPointsDelta"), True
+    else:
+        rp_before, rp_known = rp_after, False  # unknown, not "no change"; parse_matches may fill it in
+    rank_known = _node(st, "rankPrevious") is not None
 
     extra: dict[str, Any] = {k: count(st, key) for k, key in (
         ("first_bloods", "firstBloods"), ("first_deaths", "firstDeaths"), ("clutches", "clutches"),
@@ -303,6 +333,10 @@ def _match(m: dict, me: str | None, name: str) -> MatchBatch | None:
     ) if count(st, key)}
     if meta.get("isSurrender") or meta.get("isForfeit"):
         extra["surrender"] = True
+    if not rp_known and _node(st, "rankPoints"):
+        extra["rp_unknown"] = True
+    if not rank_known and _node(st, "rank"):
+        extra["rank_unknown"] = True
 
     return MatchBatch(
         board=board_of(attrs),
@@ -313,12 +347,12 @@ def _match(m: dict, me: str | None, name: str) -> MatchBatch | None:
         abandons=min(abandons, 1) if not (wins or losses) else 0,
         kills=count(st, "kills"),
         deaths=count(st, "deaths"),
-        rank_before=count(st, "rankPrevious") if _node(st, "rankPrevious") else count(st, "rank"),
+        rank_before=count(st, "rankPrevious") if rank_known else count(st, "rank"),
         rank_after=count(st, "rank"),
         rp_before=rp_before,
         rp_after=rp_after,
-        detected_at=start + timedelta(seconds=duration),
-        window_start=start,
+        detected_at=end,
+        window_start=end - timedelta(seconds=duration),
         match_id=str(attrs["id"]),
         map_name=meta.get("sessionMapName") or _title(attrs.get("sessionMap")),
         board_name=meta.get("sessionTypeName") or meta.get("gamemodeName"),

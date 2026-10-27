@@ -2,6 +2,7 @@
 
 import asyncio
 import re
+from dataclasses import replace
 from datetime import timedelta
 from types import SimpleNamespace
 
@@ -113,7 +114,8 @@ def test_embeds_fit_discord_limits(tp):
     assert built[1].title == "🎮 Ludvig played 2 matches (0W 2L)"
     stats = {f.name: f.value for f in built[5].fields}
     assert "Emerald II" in stats["🏅 Ranked"] and "peak Diamond V" in stats["🏅 Ranked"]
-    assert "5,609 matches" in stats["📚 Lifetime"] and "49% headshots" in stats["📚 Lifetime"]
+    assert "5,609 matches" in stats["📚 Lifetime"] and "37% headshots" in stats["📚 Lifetime"]
+    assert built[5].author.url == "https://r6.tracker.network/r6siege/profile/ubi/Ludvig/overview"
     assert stats["🧠 Playstyle"] == "⚔️ Supporter · 🛡️ Trapper"
     assert stats["Formerly known as"] == "OldLudvig"
 
@@ -142,6 +144,12 @@ def test_news_embeds(tp):
     many = PollResult(player=tp, snapshot=snap, previous=prev, batches=ms * 2, real_matches=True)
     [combined] = embeds.news_embeds(many, utcnow().tzinfo)
     assert combined.title.startswith("🎮 Ludvig played 12 matches")
+    # A long catch-up (e.g. after downtime) still fits in one postable message: one field per playlist.
+    quick = [replace(m, board="quick_match", board_name="Quick Match") for m in ms]
+    flood = PollResult(player=tp, snapshot=snap, previous=prev, batches=ms * 7 + quick, real_matches=True)
+    [big] = embeds.news_embeds(flood, utcnow().tzinfo)
+    assert_fits(big)
+    assert [f.name for f in big.fields] == ["Ranked", "Quick Match"] and "Ranked" in big.fields[0].name
     first = PollResult(player=tp, snapshot=snap, previous=None, backfilled=ms, real_matches=True)
     assert embeds.news_embeds(first, utcnow().tzinfo) == [] and not first.has_news
 

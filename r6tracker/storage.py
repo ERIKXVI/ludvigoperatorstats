@@ -390,9 +390,19 @@ class Storage:
             args.append(_ts(until))
         return [_batch(r) for r in self.db.execute(sql + " ORDER BY detected_at, id", args)]
 
-    def count_tracked_matches(self, player_id: int) -> int:
-        row = self.db.execute("SELECT SUM(matches) FROM match_events WHERE player_id = ?", (player_id,)).fetchone()
-        return row[0] or 0
+    def count_tracked_matches(self, player_id: int, since: datetime | None = None) -> int:
+        sql, args = "SELECT SUM(matches) FROM match_events WHERE player_id = ?", [player_id]
+        if since:
+            sql += " AND detected_at >= ?"
+            args.append(_ts(since))
+        return self.db.execute(sql, args).fetchone()[0] or 0
+
+    def last_totals_event_at(self, player_id: int) -> datetime | None:
+        """When the newest match worked out from the totals (not from match history) was noticed."""
+        row = self.db.execute(
+            "SELECT MAX(detected_at) FROM match_events WHERE player_id = ? AND match_id IS NULL", (player_id,)
+        ).fetchone()
+        return _dt(row[0])
 
     def add_operator_deltas(
         self, player_id: int, deltas: Iterable[OperatorDelta], detected_at: datetime, season: str | None

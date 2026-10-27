@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import tzinfo
+from urllib.parse import quote
 
 import discord
 
@@ -22,7 +23,7 @@ from ..formatting import (
     verdict,
     wl,
 )
-from ..models import BOARD_LABELS, MatchBatch, OperatorDelta, OperatorStats, PlayerInfo, Snapshot, pct, season_code
+from ..models import BOARD_LABELS, MatchBatch, OperatorDelta, OperatorStats, PlayerInfo, Snapshot, pct, ratio, season_code
 from ..ranks import rank_color, rank_name
 from ..storage import COMPLAINT_CATEGORIES, Complaint, TrackedPlayer
 from ..tracker import PlaySummary, PollResult
@@ -34,8 +35,17 @@ NEUTRAL = 0x3987E5
 FIELD_MAX = 1024
 
 
+TRACKER_SLUGS = {"uplay": "ubi", "psn": "psn", "xbl": "xbl"}
+
+
+def tracker_url(player: PlayerInfo) -> str:
+    """The player's R6 Tracker page (linking to it is fine; the bot never fetches it)."""
+    return (f"https://r6.tracker.network/r6siege/profile/{TRACKER_SLUGS.get(player.platform, 'ubi')}/"
+            f"{quote(player.name, safe='')}/overview")
+
+
 def _author(embed: discord.Embed, player: PlayerInfo) -> None:
-    embed.set_author(name=player.name, icon_url=player.avatar_url)
+    embed.set_author(name=player.name, icon_url=player.avatar_url, url=tracker_url(player))
 
 
 def _thumb(embed: discord.Embed, op_names: list[str], player: PlayerInfo) -> None:
@@ -94,16 +104,27 @@ def match_embed(result: PollResult, tz: tzinfo, operators_enabled: bool = True) 
 
     embed = discord.Embed(title=title, color=_color_for(wins, losses, abandons), timestamp=snap.taken_at)
     _author(embed, player)
+    by_board: dict[str, list[MatchBatch]] = {}
     for b in batches:
-        lines = [f"**K/D** {b.kills} / {b.deaths} ({b.kd:.2f})"]
-        if len(batches) > 1 or b.matches > 1:
-            lines.insert(0, f"**Result** {b.result_text}")
-        if b.board == "ranked":
-            lines.append(f"**Rank** {rank_change(b)}")
-        season_board = snap.boards.get(b.board)
+        by_board.setdefault(b.board, []).append(b)
+    for board, group in list(by_board.items())[:20]:  # one field per playlist keeps big catch-ups postable
+        first, last = group[0], group[-1]
+        k, d = sum(b.kills for b in group), sum(b.deaths for b in group)
+        lines = [f"**K/D** {k} / {d} ({ratio(k, d):.2f})"]
+        if len(batches) > 1 or first.matches > 1:
+            gw, gl, ga = (sum(b.wins for b in group), sum(b.losses for b in group), sum(b.abandons for b in group))
+            lines.insert(0, f"**Result** {first.result_text if len(group) == 1 else wl(gw, gl, ga)}")
+        if board == "ranked":
+            if len(group) == 1:
+                lines.append(f"**Rank** {rank_change(first)}")
+            else:
+                rp = sum(b.rp_change for b in group if b.rp_known)
+                lines.append(f"**Rank** {rank_name(first.rank_before)} → **{rank_name(last.rank_after)}** "
+                             f"({signed(rp)} RP, now {last.rp_after:,})")
+        season_board = snap.boards.get(board)
         if season_board:
             lines.append(f"**Season** {board_line(season_board)}")
-        embed.add_field(name=b.label, value=clip("\n".join(lines), FIELD_MAX), inline=False)
+        embed.add_field(name=first.label, value=clip("\n".join(lines), FIELD_MAX), inline=False)
 
     if result.operator_deltas:
         embed.add_field(name="Operators played", value=_op_delta_lines(result.operator_deltas), inline=False)
@@ -445,7 +466,7 @@ def matches_embed(player: PlayerInfo, events: list[MatchBatch], tz: tzinfo) -> d
         score = f" {e.rounds_won}–{e.rounds_lost}" if e.rounds_won or e.rounds_lost else ""
         line = (f"`{local(e.detected_at, tz)}` {RESULT_ICONS.get(e.result_text, '🎮')} **{e.label}**{where}"
                 f"{score} — {e.kills}/{e.deaths}")
-        if e.board == "ranked" and e.rp_change:
+        if e.board == "ranked" and e.rp_change and e.rp_known:
             line += f" ({signed(e.rp_change)} RP)"
         lines.append(line)
     embed.description = clip("\n".join(lines), 4000)

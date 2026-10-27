@@ -159,7 +159,7 @@ pip install -e ".[dev]"
 pytest
 ```
 
-The tests include a fake R6 Tracker + Arenyze server (`tests/fake_api.py`) serving real R6 Tracker response layouts with the player's identity replaced. Match detection, error handling (bad key, no R6 access, renamed player), the CLI and the complaint pop-up are all tested without real accounts.
+The tests include a fake R6 Tracker + Arenyze server (`tests/fake_api.py`). Its profile and match responses are real R6 Tracker responses with the player's identity replaced. No real operator-stats response was available, so that one is shaped after how other clients parse it. Match detection, error handling (bad key, no R6 access, renamed player), the CLI and the complaint pop-up are all tested without real accounts.
 
 Project layout:
 

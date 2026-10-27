@@ -87,10 +87,10 @@ def board(name="ranked", season=43, **kw) -> BoardStats:
 
 
 def real_match(n: int, *, won=True, minutes_ago=30, kills=8, deaths=5, board="ranked", rp=25, ops=("Ash",)) -> MatchBatch:
-    """A real match (as from match history) that ended `minutes_ago` minutes ago."""
+    """A real match (as from match history, which has no season) that ended `minutes_ago` minutes ago."""
     end = utcnow() - timedelta(minutes=minutes_ago)
     return MatchBatch(
-        board=board, season_id=43, matches=1, wins=int(won), losses=int(not won), abandons=0, kills=kills,
+        board=board, season_id=0, matches=1, wins=int(won), losses=int(not won), abandons=0, kills=kills,
         deaths=deaths, rank_before=20, rank_after=20, rp_before=3000, rp_after=3000 + rp, detected_at=end,
         window_start=end - timedelta(minutes=25), match_id=f"m{n}", map_name="Villa", board_name="Ranked",
         duration_seconds=1500, assists=2, headshots=3, rounds_won=4 if won else 2, rounds_lost=2 if won else 4,
@@ -112,6 +112,14 @@ def back_in_time(storage: Storage, player_id: int, minutes: int) -> None:
         )
     for r in db.execute("SELECT * FROM operator_events WHERE player_id = ?", (player_id,)).fetchall():
         db.execute("UPDATE operator_events SET detected_at = ? WHERE id = ?", (_shift(r["detected_at"], minutes), r["id"]))
+    for r in db.execute("SELECT * FROM players WHERE id = ?", (player_id,)).fetchall():
+        db.execute(
+            "UPDATE players SET added_at = ?, last_checked_at = ? WHERE id = ?",
+            (_shift(r["added_at"], minutes), _shift(r["last_checked_at"], minutes), r["id"]),
+        )
+    for r in db.execute("SELECT * FROM settings").fetchall():
+        if r["key"].endswith(f"_at:{player_id}"):  # time-valued per-player markers
+            db.execute("UPDATE settings SET value = ? WHERE key = ?", (_shift(r["value"], minutes), r["key"]))
     for r in db.execute("SELECT * FROM snapshots WHERE player_id = ?", (player_id,)).fetchall():
         d = json.loads(r["data"])
         d["taken_at"] = _shift(d["taken_at"], minutes)

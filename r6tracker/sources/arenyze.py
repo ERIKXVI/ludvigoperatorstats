@@ -1,8 +1,8 @@
 """Client for the Arenyze R6 API (https://r6.arenyze.com, the backend of the r6-data.js package).
 
-Ubisoft no longer serves per-operator stats from its own API, so this is where operator
-stats come from. It can also provide rank/K/D/W-L when no Ubisoft login is configured.
-A free API key is needed: sign up on r6.arenyze.com and create one.
+The optional backup source, used only when no TRN_API_KEY is set: profile (rank, K/D, W/L per
+playlist) and operator stats, but no match history. A free API key is needed: sign up on
+r6.arenyze.com and create one.
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ class ArenyzeClient:
         for attempt in range(2):
             try:
                 async with self._session.get(
-                    f"{self._base_url}{path}", params=params, headers=headers, timeout=TIMEOUT
+                    f"{self._base_url}{path}", params=params, headers=headers, timeout=TIMEOUT, allow_redirects=False
                 ) as resp:
                     status = resp.status
                     text = await resp.text()
@@ -62,6 +62,8 @@ class ArenyzeClient:
             except ValueError:
                 data = None
             msg = message_from(data, f"HTTP {status}")
+            if 300 <= status < 400:
+                raise SourceError(f"Arenyze redirected {path} (HTTP {status}); not following it with the API key.")
             if status in (401, 403):
                 raise AuthError(f"Arenyze rejected the API key (ARENYZE_API_KEY): {msg}")
             if status == 404:

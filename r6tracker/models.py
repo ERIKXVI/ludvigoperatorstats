@@ -289,6 +289,11 @@ class MatchBatch:
         return self.rp_after - self.rp_before
 
     @property
+    def rp_known(self) -> bool:
+        """False when the source didn't say what the RP was before this match."""
+        return not self.extra.get("rp_unknown")
+
+    @property
     def label(self) -> str:
         return self.board_name or board_label(self.board)
 

@@ -31,7 +31,8 @@ def test_trn_profile_player_and_lifetime():
     assert (life.matches, life.wins, life.losses, life.abandons, life.kills, life.deaths) == (
         5609, 2826, 2606, 177, 20461, 21605
     )
-    assert snap.extras["headshot_pct"] == 48.57 and snap.extras["assists"] == 3092
+    # % of kills (7637 / 20461), not R6 Tracker's headshot accuracy (48.57%)
+    assert snap.extras["headshot_pct"] == 37.32 and snap.extras["assists"] == 3092
     assert snap.playstyles["attacker_supporter"] == 5924 and snap.playstyles["defender_trapper"] == 5577
 
 
@@ -67,8 +68,10 @@ def test_trn_matches():
     assert (m.rounds_won, m.rounds_lost, m.kills, m.deaths, m.assists, m.headshots) == (2, 4, 1, 5, 1, 0)
     assert (m.rp_before, m.rp_after, m.rp_change) == (2382, 2363, -19)
     assert m.duration_seconds == 1574  # 26m 14s, from milliseconds
-    assert m.window_start == datetime(2024, 11, 10, 5, 56, 20, 879000, tzinfo=timezone.utc)
+    assert m.detected_at == datetime(2024, 11, 10, 5, 56, 20, 879000, tzinfo=timezone.utc)  # timestamp = end
     assert (m.detected_at - m.window_start).total_seconds() == 1574
+    # Back-to-back matches don't overlap when the timestamp is read as the end.
+    assert all(newer.window_start >= older.detected_at for newer, older in zip(matches, matches[1:]))
     assert m.operators == ["Kapkan", "Gridlock", "Ace", "Melusi", "Frost"]
     win = matches[1]
     assert (win.result_text, win.map_name, win.rp_change, win.extra) == (
@@ -160,3 +163,33 @@ def test_snapshot_roundtrip():
     back = Snapshot.from_dict(snap.to_dict())
     assert back == snap
     assert back.total.matches == sum(b.matches for b in snap.boards.values())
+
+
+def test_null_previous_rp_is_filled_from_the_older_match_or_marked_unknown():
+    from r6tracker.formatting import rank_change
+    from r6tracker.tracker import PlaySummary
+
+    data = load("trn_matches.json")
+    ms = data["data"]["matches"]
+    for m in (ms[1], ms[5]):  # a middle match and the oldest one on the page
+        st = m["segments"][0]["stats"]
+        for key in ("rankPointsPrevious", "rankPointsDelta", "rankPrevious"):
+            st[key]["value"] = None
+    matches, _ = parse_matches(data, PlayerInfo("Ludvig", user_id=UID))
+    # Chalet win: previous RP comes from the next older ranked match (Oregon, ended at 2341).
+    assert (matches[1].rp_before, matches[1].rp_after, matches[1].rp_change, matches[1].rp_known) == (2341, 2382, 41, True)
+    assert matches[1].rank_before == matches[2].rank_after
+    # The oldest match on the page has nothing older to look at: unknown, not "±0".
+    oldest = matches[5]
+    assert not oldest.rp_known and "RP, now" not in rank_change(oldest) and "±0" not in rank_change(oldest)
+    assert PlaySummary([oldest]).rp_change == 0 and PlaySummary(matches[:2]).rp_change == -19 + 41
+
+
+def test_name_changes_newest_first():
+    data = load("trn_profile.json")
+    data["data"]["metadata"]["nameChanges"] = [
+        {"name": "First", "timestamp": "2019-01-01T00:00:00+00:00"},
+        {"name": "Second", "timestamp": "2022-05-01T00:00:00+00:00"},
+        {"name": "NoDate"},
+    ]
+    assert snapshot_from_profile(data, "uplay").name_changes == ["Second", "First", "NoDate"]
