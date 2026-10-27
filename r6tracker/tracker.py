@@ -200,6 +200,11 @@ class PlaySummary:
         return any(e.rp_known for e in self.rated)
 
     @property
+    def rp_incomplete(self) -> bool:
+        """Some ranked matches' RP change is unknown, so rp_change leaves them out."""
+        return self.rp_known and not all(e.rp_known for e in self.rated)
+
+    @property
     def rank_before(self) -> int | None:
         """Rank before the first ranked match, if known."""
         r = self.rated
@@ -436,13 +441,15 @@ class Tracker:
         """If the first new ranked match has no previous RP/rank, the last snapshot from before it
         ended has it (same season, and consistent with the last ranked match we know)."""
         ranked = [m for m in batches if m.board == "ranked" and not m.extra.get("no_rank")]
-        if not ranked or prev is None or prev.season_id != snap.season_id:
+        if not ranked or not (ranked[0].extra.get("rp_unknown") or ranked[0].extra.get("rank_unknown")):
             return
         first = ranked[0]
-        board = prev.boards.get("ranked")
-        if not board or not (first.extra.get("rp_unknown") or first.extra.get("rank_unknown")):
+        # The stats as they were when the match ended (it may be listed a poll or two later).
+        ref = self.storage.snapshot_as_of(tp.id, first.detected_at)
+        if ref is None or ref.sources != snap.sources or ref.season_id != snap.season_id:
             return
-        if prev.taken_at > first.detected_at:
+        board = ref.boards.get("ranked")
+        if not board:
             return
         last = self.storage.last_ranked_event(tp.id)
         if last is not None and last.rp_after and last.rp_after != board.rank_points:
@@ -576,6 +583,7 @@ class Tracker:
         """
         key = f"session_announced_at:{tp.id}"
         start_key = f"session_announced_start_at:{tp.id}"
+        end_key = f"session_announced_end_at:{tp.id}"
         current = self.storage.get_player(tp.id) or tp
         announced_until = _when(self.storage.get_setting(key))
         if announced_until is None:
@@ -590,13 +598,20 @@ class Tracker:
         start, end = groups[-1][0].detected_at, groups[-1][-1].detected_at
         if end <= announced_until or utcnow() - end < self.session_gap:
             return None
-        announced_start = _when(self.storage.get_setting(start_key))
         self.storage.set_setting(key, end.isoformat())
-        self.storage.set_setting(start_key, start.isoformat())
-        if announced_start is not None and start <= announced_start:
-            return None  # the session we already announced, grown by a match R6 Tracker listed late
+        announced_start = _when(self.storage.get_setting(start_key))
+        announced_end = _when(self.storage.get_setting(end_key))
+        if (announced_start is not None and announced_end is not None and start <= announced_start
+                and end <= announced_end + self.session_gap):
+            # The session we already posted, only grown by a match R6 Tracker listed late (it ended
+            # before that post went out). If he played on after the post, it's announced again in full.
+            return None
         session = self._with_operators(tp, groups[-1])
-        return session if session.matches >= min_matches else None
+        if session.matches < min_matches:
+            return None
+        self.storage.set_setting(start_key, start.isoformat())
+        self.storage.set_setting(end_key, end.isoformat())
+        return session
 
     def _legacy_announced(self, player_id: int) -> datetime | None:
         """Earlier versions remembered the last announced session by event id; carry that over."""

@@ -124,7 +124,8 @@ def match_embed(result: PollResult, tz: tzinfo, operators_enabled: bool = True) 
                     move = f"**{rank_name(part.rank_after)}**"
                     if part.rank_before is not None and part.rank_before != part.rank_after:
                         move = f"{rank_name(part.rank_before)} → {move}"
-                    rp = f"{signed(part.rp_change)} RP, " if part.rp_known else ""
+                    rp = f"{signed(part.rp_change)} RP{' (incomplete)' if part.rp_incomplete else ''}, " \
+                        if part.rp_known else ""
                     lines.append(f"**Rank** {move} ({rp}now {part.rated[-1].rp_after:,})")
         season_board = snap.boards.get(board)
         if season_board:
@@ -264,7 +265,9 @@ def summary_embed(player: PlayerInfo, s: PlaySummary, tz: tzinfo, title: str, em
             move = f"**{rank_name(s.rank_after)}**"
             if s.rank_before is not None and s.rank_before != s.rank_after:
                 move = f"{rank_name(s.rank_before)} → {move}"
-            line += f"\n{move}" + (f" ({signed(s.rp_change)} RP)" if s.rp_known else "")
+            if s.rp_known:
+                move += f" ({signed(s.rp_change)} RP{', incomplete' if s.rp_incomplete else ''})"
+            line += f"\n{move}"
         embed.add_field(name=part.events[0].label, value=line, inline=True)
     counts = s.operator_counts
     if counts:

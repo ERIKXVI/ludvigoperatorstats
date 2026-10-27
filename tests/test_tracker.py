@@ -622,3 +622,58 @@ def test_late_listed_match_keeps_its_season(storage, fetcher):
     back_in_time(storage, tp.id, 5)
     fetcher.history = [real_match(1, minutes_ago=8)]  # ended before the previous poll, listed only now
     assert run(tr.poll(tp)).batches[0].season_id == 43
+
+
+def test_session_that_continued_after_its_post_is_announced_again_in_full(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher, session_gap=timedelta(minutes=45))
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = []
+    tp, _ = run(tr.add_player("Ludvig"))
+    back_in_time(storage, tp.id, 300)
+    fetcher.history = [real_match(2, minutes_ago=200), real_match(1, minutes_ago=230)]
+    run(tr.poll(tp))
+    assert tr.finished_session(tp).matches == 2  # posted ~45 min after m2
+    # m3 ended 40 min after m2 (inside the gap) but was listed late; then he kept playing.
+    fetcher.history = [real_match(5, minutes_ago=80), real_match(4, minutes_ago=120),
+                       real_match(3, minutes_ago=160)] + fetcher.history
+    run(tr.poll(tp))
+    again = tr.finished_session(tp)
+    assert again is not None and again.matches == 5
+
+
+def test_one_match_session_grown_by_a_late_listing_is_announced(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher, session_gap=timedelta(minutes=45))
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = []
+    tp, _ = run(tr.add_player("Ludvig"))
+    back_in_time(storage, tp.id, 300)
+    fetcher.history = [real_match(1, minutes_ago=200)]
+    run(tr.poll(tp))
+    assert tr.finished_session(tp) is None  # 1 match: not posted
+    fetcher.history = [real_match(2, minutes_ago=160)] + fetcher.history  # ended 40 min later, listed late
+    run(tr.poll(tp))
+    assert tr.finished_session(tp).matches == 2
+
+
+def test_previous_rp_from_snapshot_works_when_the_match_is_listed_late(storage, fetcher):
+    from dataclasses import replace as dc_replace
+
+    from conftest import real_match
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked(rank_points=3000, rank=20)}
+    fetcher.history = [real_match(0, minutes_ago=60 * 30, rp=0)]  # yesterday's last ranked match, at 3000
+    tp, _ = run(tr.add_player("Ludvig"))
+    back_in_time(storage, tp.id, 60)
+    match = dc_replace(real_match(1, minutes_ago=20, rp=25), extra={"rp_unknown": True, "rank_unknown": True})
+    match.rp_before, match.rank_before = match.rp_after, match.rank_after
+    fetcher.boards = {"ranked": ranked(rank_points=3025, rank=21, wins=11)}  # profile already updated...
+    assert not run(tr.poll(tp)).batches  # ...but the match isn't listed yet
+    back_in_time(storage, tp.id, 5)
+    fetcher.history = [match] + fetcher.history
+    [m] = run(tr.poll(tp)).batches
+    assert (m.rp_before, m.rp_change, m.rp_known) == (3000, 25, True)

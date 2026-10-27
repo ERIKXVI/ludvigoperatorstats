@@ -30,6 +30,7 @@ from .formatting import (
     wl,
 )
 from .models import BOARD_LABELS, season_code, utcnow
+from .ranks import rank_name
 from .sources import SourceError
 from .storage import COMPLAINT_CATEGORIES, Storage, TrackedPlayer
 from .tracker import PlaySummary, PollResult, Tracker
@@ -162,8 +163,13 @@ def print_summary(title: str, s: PlaySummary, app: App) -> None:
     assert s.start and s.end
     print(f"  {local(s.start, tz)} – {local(s.end, tz, '%H:%M')}")
     print(f"  {plural(s.matches, 'match', 'matches')} · {wl(s.wins, s.losses, s.abandons)} ({s.win_rate:.0f}%) · K/D {s.kd:.2f} ({s.kills}/{s.deaths})")
-    if s.ranked_events:
-        print(f"  Ranked RP: {s.rp_change:+d}")
+    if s.rank_after is not None:
+        move = rank_name(s.rank_after)
+        if s.rank_before is not None and s.rank_before != s.rank_after:
+            move = f"{rank_name(s.rank_before)} -> {move}"
+        if s.rp_known:
+            move += f" ({s.rp_change:+d} RP{', incomplete' if s.rp_incomplete else ''})"
+        print(f"  Ranked: {move}")
     for board, part in s.by_board.items():
         print(f"  {BOARD_LABELS.get(board, board)}: {part.matches} · {wl(part.wins, part.losses, part.abandons)} · K/D {part.kd:.2f}")
     if s.operator_counts:

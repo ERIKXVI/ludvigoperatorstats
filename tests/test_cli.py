@@ -97,3 +97,23 @@ def test_cli_reports_config_errors(monkeypatch, tmp_path, capsys):
     monkeypatch.setenv("DATA_DIR", str(tmp_path))
     assert cli.main(["--env", "nope.env", "add", "Ludvig"]) == 1
     assert "No stats source configured" in capsys.readouterr().err
+
+
+def test_cli_summary_never_prints_an_unknown_rp_change_as_zero(capsys):
+    from conftest import real_match
+
+    from r6tracker.cli import App, print_summary
+    from r6tracker.config import Settings
+    from r6tracker.tracker import PlaySummary
+
+    app = App(Settings(timezone="UTC"), None, None)
+    unknown = real_match(1)
+    unknown.extra = {"rp_unknown": True}
+    no_rank = real_match(2)
+    no_rank.extra = {"no_rank": True}
+    print_summary("t", PlaySummary([unknown]), app)
+    print_summary("t", PlaySummary([no_rank]), app)
+    out = capsys.readouterr().out
+    assert "RP" not in out and "+0" not in out
+    print_summary("t", PlaySummary([unknown, real_match(3)]), app)
+    assert "(+25 RP, incomplete)" in capsys.readouterr().out
