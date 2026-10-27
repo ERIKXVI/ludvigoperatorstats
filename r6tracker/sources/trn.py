@@ -132,20 +132,32 @@ class TrackerNetworkClient:
         ident = player.user_id if by_id and player.user_id else player.name
         return f"{slug}/{quote(ident, safe='')}"
 
-    async def _lookup(self, player: PlayerInfo, path: str, params: dict[str, str] | None = None) -> Any:
-        """Look the player up by their Ubisoft id (stable across renames) and fall back to the name.
+    async def _lookup(
+        self, player: PlayerInfo, path: str, params: dict[str, str] | None = None, id_of=None
+    ) -> tuple[Any, bool]:
+        """Fetch `path` for the player by Ubisoft id (stable across renames), else by name.
 
-        Callers that get an id back check it, so a name now used by someone else isn't silently followed.
+        Returns (data, looked up by id). id_of(data) tells which account a response is about; it's
+        used to learn whether this API takes ids at all. Callers check the account themselves.
         """
+        by_id = f"/{path.format(who=self._who(player, by_id=True))}"
+        by_name = f"/{path.format(who=self._who(player))}"
         if player.user_id and self._ids_work is not False:
             try:
-                data = await self._get(f"/{path.format(who=self._who(player, by_id=True))}", params)
+                data = await self._get(by_id, params)
                 self._ids_work = True
-                return data
+                return data, True
             except PlayerNotFound:
-                if self._ids_work is None:
-                    self._ids_work = False  # this API only takes names; stop trying ids
-        return await self._get(f"/{path.format(who=self._who(player))}", params)
+                pass
+        try:
+            data = await self._get(by_name, params)
+        except PlayerNotFound:
+            if not player.user_id or self._ids_work is not False:
+                raise
+            return await self._get(by_id, params), True  # maybe renamed: one more try by id
+        if player.user_id and self._ids_work is None and id_of and id_of(data) == player.user_id:
+            self._ids_work = False  # the name found this very account, so the id lookup just isn't supported
+        return data, False
 
     @staticmethod
     def _same_account(player: PlayerInfo, found_id: str | None) -> None:
@@ -165,7 +177,7 @@ class TrackerNetworkClient:
         return info
 
     async def profile(self, player: PlayerInfo) -> Snapshot:
-        data = await self._lookup(player, "profile/{who}")
+        data, _ = await self._lookup(player, "profile/{who}", id_of=_profile_id)
         snap = snapshot_from_profile(data, player.platform)
         self._same_account(player, snap.player.user_id)
         snap.player.name = snap.player.name or player.name
@@ -179,11 +191,20 @@ class TrackerNetworkClient:
         if season != "all" and season_id is None:
             raise SourceError(f"Unknown season '{season}'. Use current, all, or a season like Y11S2.")
         params = {"sessionType": SESSION_TYPES.get(mode, mode), "season": str(season_id) if season_id else "all"}
-        return parse_operators(await self._lookup(player, "profile/{who}/segments/operator", params))
+        data, by_id = await self._lookup(player, "profile/{who}/segments/operator", params)
+        if not by_id and player.user_id:
+            # Operator stats don't say whose they are: make sure the name is still this account.
+            profile, _ = await self._lookup(player, "profile/{who}", id_of=_profile_id)
+            self._same_account(player, _profile_id(profile))
+        return parse_operators(data)
 
     async def matches(self, player: PlayerInfo, cursor: int | None = None) -> tuple[list[MatchBatch], int | None]:
         """One page of recent matches (newest first) and the cursor for the next page."""
         params = {"next": str(cursor)} if cursor is not None else None
-        data = await self._lookup(player, "matches/{who}", params)
+        data, _ = await self._lookup(player, "matches/{who}", params, id_of=requesting_player_id)
         self._same_account(player, requesting_player_id(data))
         return parse_matches(data, player)
+
+
+def _profile_id(data: Any) -> str | None:
+    return player_from_profile(data, "uplay").user_id

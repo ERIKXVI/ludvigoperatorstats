@@ -189,3 +189,34 @@ def test_missing_later_page_keeps_the_matches_already_read(storage):
         assert {b.match_id for b in res.batches} == set(ids[2:])  # the newest 20, kept and posted
 
     run_with_server(test)
+
+
+def test_id_lookups_are_learned_and_names_still_checked(storage):
+    async def test(apis, trn, are):
+        apis.ids_supported = False  # this API only knows names
+        client = trn()
+        tracker = Tracker(storage, StatsFetcher(client))
+        tp, _ = await tracker.add_player("Ludvig")
+        assert client._ids_work is False  # learned once: the name found the same account
+        before = len(apis.requests)
+        await tracker.poll(tp)
+        assert not any(USER_ID in r for r in apis.requests[before:])  # no wasted id lookups
+        # The name gets reused by someone else: refused, for profile and for /operators alike.
+        apis.give_name_to("99999999-9999-9999-9999-999999999999")
+        assert "different Ubisoft account" in ((await tracker.poll(tp)).error or "")
+        with pytest.raises(PlayerNotFound, match="different Ubisoft account"):
+            await client.operators(storage.get_player(tp.id).info, "all")
+
+    run_with_server(test)
+
+
+def test_one_failed_id_lookup_doesnt_turn_ids_off(storage):
+    async def test(apis, trn, are):
+        client = trn()
+        assert (await client.profile(PlayerInfo("Ludvig", user_id=USER_ID))).player.user_id == USER_ID
+        assert client._ids_work is True
+        with pytest.raises(PlayerNotFound):  # some other id that isn't on R6 Tracker
+            await client.profile(PlayerInfo("Nobody", user_id="00000000-dead-beef-0000-000000000000"))
+        assert client._ids_work is True
+
+    run_with_server(test)

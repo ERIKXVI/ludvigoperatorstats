@@ -49,7 +49,7 @@ def season_code(season_id: int | None) -> str | None:
 
 def season_id_from_code(code: str) -> int | None:
     """'Y11S3' -> 43 (None if it isn't a season code)."""
-    m = re.fullmatch(r"Y(\d+)S([1-4])", code.strip().upper())
+    m = re.fullmatch(r"Y([1-9]\d*)S([1-4])", code.strip().upper())
     return (int(m[1]) - 1) * 4 + int(m[2]) if m else None
 
 
@@ -292,6 +292,11 @@ class MatchBatch:
     def rp_known(self) -> bool:
         """False when the source didn't say what the RP was before this match."""
         return not self.extra.get("rp_unknown")
+
+    @property
+    def rank_known(self) -> bool:
+        """False when the source didn't say what the rank was before this match."""
+        return not self.extra.get("rank_unknown")
 
     @property
     def label(self) -> str:

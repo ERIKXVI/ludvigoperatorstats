@@ -152,6 +152,15 @@ r6tracker export --out export        # matches.csv, operators_played.csv, compla
 
 `python -m r6tracker …` works too.
 
+### Upgrading from the Ubisoft-login version
+
+Earlier versions logged in to Ubisoft. If you used one:
+
+- Remove `UBISOFT_EMAIL` and `UBISOFT_PASSWORD` from `.env`; the bot warns at startup while they're there.
+- Delete `data/ubisoft_session.json`. `deploy/gcp/deploy.sh` does this on the server for you.
+
+Your tracked history and complaints are kept. Matches already counted the old way aren't counted again.
+
 ## Development
 
 ```bash
@@ -159,7 +168,7 @@ pip install -e ".[dev]"
 pytest
 ```
 
-The tests include a fake R6 Tracker + Arenyze server (`tests/fake_api.py`). Its profile and match responses are real R6 Tracker responses with the player's identity replaced. No real operator-stats response was available, so that one is shaped after how other clients parse it. Match detection, error handling (bad key, no R6 access, renamed player), the CLI and the complaint pop-up are all tested without real accounts.
+The tests include a fake R6 Tracker + Arenyze server (`tests/fake_api.py`). Its profile and match responses are real R6 Tracker responses with the player's identity replaced. The profile was also trimmed, its current season renumbered, and a Dual Front segment added as a copy of the Quick Match one. No real operator-stats response was available, so that one is shaped after how other clients parse it. Match detection, error handling (bad key, no R6 access, renamed player), the CLI and the complaint pop-up are all tested without real accounts.
 
 Project layout:
 

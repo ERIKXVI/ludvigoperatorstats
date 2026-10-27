@@ -1,5 +1,7 @@
-"""Parsing. The trn_* fixtures are real R6 Tracker responses with the player's identity replaced,
-except trn_operators.json, which is shaped after how three independent clients parse that endpoint."""
+"""Parsing. trn_profile.json and trn_matches.json are real R6 Tracker responses with the player's identity
+replaced; the profile was also trimmed, its current season renumbered to 43, and a Dual Front segment added
+as a copy of the Quick Match one. trn_operators.json is synthetic, shaped after how three independent
+clients parse that endpoint."""
 
 from datetime import datetime, timezone
 
@@ -193,3 +195,24 @@ def test_name_changes_newest_first():
         {"name": "NoDate"},
     ]
     assert snapshot_from_profile(data, "uplay").name_changes == ["Second", "First", "NoDate"]
+
+
+def test_previous_rp_isnt_taken_from_far_back_or_from_matches_without_rank():
+    data = load("trn_matches.json")
+    ms = data["data"]["matches"]
+    st = ms[3]["segments"][0]["stats"]  # Clubhouse; the next older ranked match is days earlier
+    for key in ("rankPointsPrevious", "rankPointsDelta", "rankPrevious"):
+        st[key]["value"] = None
+    for key in ("rankPoints", "rankPointsPrevious", "rankPointsDelta", "rankPrevious"):  # Oregon: no rank data
+        ms[2]["segments"][0]["stats"][key]["value"] = None
+    st1 = ms[1]["segments"][0]["stats"]  # Chalet: its next older match is that no-rank Oregon one
+    for key in ("rankPointsPrevious", "rankPointsDelta", "rankPrevious"):
+        st1[key]["value"] = None
+    matches, _ = parse_matches(data, PlayerInfo("Ludvig", user_id=UID))
+    assert not matches[3].rp_known  # 3 days back is too far to borrow from
+    assert matches[2].extra.get("no_rank") and matches[2].rp_change == 0
+    assert not matches[1].rp_known  # not "+2,382 RP" from a match without rank data
+
+
+def test_year_zero_isnt_a_season():
+    assert season_id_from_code("Y0S4") is None and season_id_from_code("Y1S1") == 1

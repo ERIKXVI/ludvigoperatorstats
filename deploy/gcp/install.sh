@@ -19,6 +19,7 @@ mkdir -p "$APP/app"
 tar -xzf /tmp/r6tracker.tgz -C "$APP/app"
 install -m 600 /tmp/r6tracker.env "$APP/.env"
 rm -f /tmp/r6tracker.tgz /tmp/r6tracker.env
+rm -f "$APP/data/ubisoft_session.json"  # left over from versions that logged in to Ubisoft
 
 echo "==> Installing the bot (takes a minute the first time)"
 [ -x "$APP/venv/bin/python" ] || python3 -m venv "$APP/venv"

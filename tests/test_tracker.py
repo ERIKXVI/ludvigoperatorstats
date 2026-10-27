@@ -402,3 +402,91 @@ def test_tracked_count_starts_when_tracking_began(storage, fetcher):
     tp, _ = run(tr.add_player("Ludvig"))
     tp = storage.get_player(tp.id)
     assert storage.count_tracked_matches(tp.id) == 4 and storage.count_tracked_matches(tp.id, since=tp.added_at) == 0
+
+
+def test_history_recovering_after_a_fallback_announces_new_matches(storage, fetcher):
+    from conftest import real_match
+
+    from r6tracker.sources import EndpointUnavailable
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = []
+    fetcher.matches_error = EndpointUnavailable("404")
+    tp, _ = run(tr.add_player("Ludvig"))  # no history for this player yet: totals for now
+    back_in_time(storage, tp.id, 40)
+    tr._no_history_until.clear()  # retry time reached
+    fetcher.matches_error = None
+    fetcher.history = [real_match(1, minutes_ago=0)]
+    res = run(tr.poll(tp))
+    assert [b.match_id for b in res.batches] == ["m1"] and res.has_news  # not swallowed as a "first look"
+
+
+def test_lasting_history_outage_falls_back_to_totals_without_losing_matches(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = [real_match(0, minutes_ago=100)]
+    tp, _ = run(tr.add_player("Ludvig"))
+    run(tr.poll(tp))  # history works (this is the reference point)
+    fetcher.matches_error = SourceError("R6 Tracker down")
+    fetcher.boards = {"ranked": ranked(wins=11)}
+    assert not run(tr.poll(tp)).batches  # a hiccup at first: wait for history
+    tr._history_failing_since[tp.id] -= timedelta(minutes=31)
+    fetcher.boards = {"ranked": ranked(wins=12)}
+    res = run(tr.poll(tp))
+    assert not res.real_matches and [(b.matches, b.wins) for b in res.batches] == [(2, 2)]  # both, none lost
+
+
+def test_failure_on_a_later_page_retries_the_whole_catch_up(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher)
+    fetcher.page_size = 2
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = [real_match(0, minutes_ago=300)]
+    tp, _ = run(tr.add_player("Ludvig"))
+    back_in_time(storage, tp.id, 290)
+    fetcher.history = [real_match(n, minutes_ago=280 - n * 10) for n in range(5, 0, -1)] + fetcher.history
+    real_page = fetcher.matches
+
+    async def flaky(player, cursor=None):
+        if cursor:
+            raise SourceError("rate limited")
+        return await real_page(player, cursor)
+
+    fetcher.matches = flaky
+    assert not run(tr.poll(tp)).batches  # nothing half-stored
+    fetcher.matches = real_page
+    assert [b.match_id for b in run(tr.poll(tp)).batches] == ["m1", "m2", "m3", "m4", "m5"]
+
+
+def test_upgrade_keeps_the_old_session_announcement(storage, fetcher):
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    tp, _ = run(tr.add_player("Ludvig"))
+    for wins in (11, 12, 13):
+        back_in_time(storage, tp.id, 15)
+        fetcher.boards = {"ranked": ranked(wins=wins)}
+        run(tr.poll(tp))
+    back_in_time(storage, tp.id, 60 * 20)  # that session was yesterday...
+    last = storage.match_events(tp.id)[-1]
+    storage.set_setting(f"session_announced:{tp.id}", str(last.id))  # ...and an older version announced it
+    assert tr.finished_session(tp) is None
+
+
+def test_new_matches_get_the_season_only_when_its_certain(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = []
+    tp, _ = run(tr.add_player("Ludvig"))
+    back_in_time(storage, tp.id, 30)
+    fetcher.history = [real_match(1, minutes_ago=0)]
+    assert run(tr.poll(tp)).batches[0].season_id == 43
+    back_in_time(storage, tp.id, 30)
+    fetcher.boards = {"ranked": ranked(season=44, wins=1)}  # a new season started meanwhile
+    fetcher.history = [real_match(2, minutes_ago=0)] + fetcher.history
+    assert run(tr.poll(tp)).batches[0].season_id == 0  # might belong to either season

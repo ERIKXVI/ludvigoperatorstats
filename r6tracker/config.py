@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -89,6 +90,11 @@ class Settings:
             timezone=os.getenv("TIMEZONE") or "UTC",
         )
         s.tz  # validate early
+        if os.getenv("UBISOFT_EMAIL") or os.getenv("UBISOFT_PASSWORD"):
+            logging.getLogger(__name__).warning(
+                "UBISOFT_EMAIL / UBISOFT_PASSWORD aren't used any more (stats come from R6 Tracker). "
+                "Remove them from .env, and delete %s if it exists.", s.data_dir / "ubisoft_session.json"
+            )
         return s
 
     @property

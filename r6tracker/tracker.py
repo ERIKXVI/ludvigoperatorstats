@@ -28,7 +28,7 @@ from .models import (
     season_code,
     utcnow,
 )
-from .sources import EndpointUnavailable, SourceError
+from .sources import SourceError
 from .storage import Storage, TrackedPlayer
 
 log = logging.getLogger(__name__)
@@ -36,6 +36,7 @@ log = logging.getLogger(__name__)
 OPERATOR_MODE = "all"  # operator stats we track: all playlists together
 MAX_MATCH_PAGES = 5  # when catching up after downtime, read at most this many pages of match history
 HISTORY_RETRY = timedelta(minutes=30)  # a player without match history gets checked again after this
+HISTORY_FAILOVER = timedelta(minutes=30)  # history failing this long for a player -> count from the totals
 
 
 # ------------------------------------------------------------------ diffing
@@ -189,7 +190,7 @@ class PlaySummary:
 
     @property
     def rank_before(self) -> int | None:
-        r = self.ranked_events
+        r = [e for e in self.ranked_events if e.rank_known]
         return r[0].rank_before if r else None
 
     @property
@@ -266,6 +267,8 @@ class Tracker:
         self._catchup_until: dict[int, datetime] = {}
         self._ops_attempted_at: dict[int, datetime] = {}
         self._no_history_until: dict[int, datetime] = {}  # players whose match history isn't available
+        self._history_failing_since: dict[int, datetime] = {}
+        self._history_ref: dict[int, Snapshot] = {}  # snapshot from the last poll where history worked
         self._locks: dict[int, asyncio.Lock] = defaultdict(asyncio.Lock)
 
     async def add_player(self, name: str, platform: str = "uplay") -> tuple[TrackedPlayer, PollResult]:
@@ -305,20 +308,21 @@ class Tracker:
         result.snapshot = snap
 
         # Totals are only comparable with a snapshot from the same source (playlist names differ).
-        same_source = prev is not None and prev.sources == snap.sources
-        if prev and same_source:
+        comparable = prev if prev is not None and prev.sources == snap.sources else None
+        if comparable:
             # A playlist missing from one response shouldn't make its whole season look new next time.
             season = snap.season_id
-            for board_id, b in prev.boards.items():
+            for board_id, b in comparable.boards.items():
                 if board_id not in snap.boards and b.season_id >= season:
                     snap.boards[board_id] = b
-        totals = diff_boards(prev, snap) if prev and same_source else []
+        totals = diff_boards(comparable, snap) if comparable else []
 
         use_history = self.fetcher.has_matches and now >= self._no_history_until.get(tp.id, now)
-        if use_history and await self._fetch_new_matches(tp, snap, result, totals):
+        fallback = await self._fetch_new_matches(tp, snap, result, comparable, totals) if use_history else totals
+        if fallback is None:
             result.real_matches = True
         else:
-            result.batches = totals
+            result.batches = fallback
 
         if self.fetcher.has_operators:
             result.operator_deltas = await self._update_operators(tp, prev, snap, now, bool(result.batches),
@@ -335,16 +339,20 @@ class Tracker:
         return result
 
     async def _fetch_new_matches(
-        self, tp: TrackedPlayer, snap: Snapshot, result: PollResult, totals: list[MatchBatch]
-    ) -> bool:
-        """Read match history and keep the matches we haven't stored yet.
+        self, tp: TrackedPlayer, snap: Snapshot, result: PollResult, prev: Snapshot | None, totals: list[MatchBatch]
+    ) -> list[MatchBatch] | None:
+        """Read match history and keep the matches we haven't stored yet (into `result`).
 
-        Returns False when this poll should use the totals instead (no match history for this player).
+        Returns None when match history handled this poll, or the totals-based matches to use instead.
+        `prev` is the previous snapshot if it's comparable (same source), `totals` what it says changed.
         """
         assert self.fetcher
         baseline_key = f"match_baseline_at:{tp.id}"
         baseline_at = _when(self.storage.get_setting(baseline_key))
         had_history = self.storage.has_real_matches(tp.id)
+        established = had_history or baseline_at is not None
+        if baseline_at is None and not had_history and prev is not None:
+            baseline_at = prev.taken_at  # already being tracked (from the totals): what ends from now on is news
         first_look = baseline_at is None and not had_history
         # Matches up to the newest one counted from the totals (older version, or a fallback) are counted already.
         counted_until = self.storage.last_totals_event_at(tp.id)
@@ -354,19 +362,15 @@ class Tracker:
         for page_no in range(1 if first_look else MAX_MATCH_PAGES):
             try:
                 page = await self.fetcher.matches(snap.player, cursor)
-            except EndpointUnavailable as e:
-                if not had_history and not baseline_at:
-                    log.warning("No match history for %s (%s); using the totals, checking again later.", tp.name, e)
-                    self._no_history_until[tp.id] = utcnow() + HISTORY_RETRY
-                    return False
-                snap.errors["matches"] = str(e)  # it worked before: a hiccup, the matches show up later by id
-                break
-            except SourceError as e:
-                log.warning("Couldn't fetch matches for %s: %s", tp.name, e)
+            except SourceError as e:  # incl. EndpointUnavailable on the first page
                 snap.errors["matches"] = str(e)
-                break
-            if page is None:
-                return False
+                if page_no > 0:
+                    # Catch up in one go on the next poll rather than leaving a gap behind.
+                    log.warning("Couldn't read all of %s's new matches (%s); trying again next time.", tp.name, e)
+                    return None
+                return self._history_failed(tp, snap, totals, e, established)
+            if page is None:  # the source has no match history
+                return totals
             matches, cursor = page
             listed_any = listed_any or bool(matches)
             known = self.storage.known_match_ids(tp.id, [m.match_id or "" for m in matches])
@@ -382,23 +386,49 @@ class Tracker:
             if not first_look:
                 log.warning("%s played more than %d pages of matches since the last check; older ones skipped",
                             tp.name, MAX_MATCH_PAGES)
+        self._history_failing_since.pop(tp.id, None)
+        self._history_ref[tp.id] = snap
 
         new = sorted(found.values(), key=lambda m: m.detected_at)
+        if first_look or not self.storage.get_setting(baseline_key):
+            # From now on every match that ends is news, even if this first look was empty.
+            self.storage.set_setting(baseline_key, (baseline_at or snap.taken_at).isoformat())
         if first_look:
-            if "matches" not in snap.errors:
-                # From now on every match that ends is news, even if this first look was empty.
-                self.storage.set_setting(baseline_key, snap.taken_at.isoformat())
             result.backfilled = new  # season unknown for these: season_id stays 0
-            return True
-        if not listed_any and totals and "matches" not in snap.errors:
+            return None
+        if not listed_any and totals:
             log.warning("R6 Tracker lists no matches for %s but the totals moved; counting from the totals.", tp.name)
-            return False
-        # R6 Tracker can list a match late; one that ended before our first look is history, not news.
+            return totals
+        # R6 Tracker can list a match late; one that ended before we started watching is history, not news.
         result.backfilled = [m for m in new if baseline_at and m.detected_at < baseline_at]
         result.batches = [m for m in new if not (baseline_at and m.detected_at < baseline_at)]
+        same_season = prev is not None and prev.season_id == snap.season_id
         for m in result.batches:
-            m.season_id = m.season_id or snap.season_id
-        return True
+            if same_season and prev and m.detected_at >= prev.taken_at:
+                m.season_id = m.season_id or snap.season_id  # otherwise unknown (could span a new season)
+        return None
+
+    def _history_failed(
+        self, tp: TrackedPlayer, snap: Snapshot, totals: list[MatchBatch], error: Exception, established: bool
+    ) -> list[MatchBatch] | None:
+        """The first page of match history couldn't be read. Returns totals-based matches to use, or None."""
+        now = snap.taken_at
+        if not established:
+            # No match history for this player (yet): count from the totals and look again later.
+            log.warning("No match history for %s (%s); using the totals, checking again later.", tp.name, error)
+            self._no_history_until[tp.id] = now + HISTORY_RETRY
+            return totals
+        since = self._history_failing_since.setdefault(tp.id, now)
+        if now - since < HISTORY_FAILOVER:
+            return None  # a hiccup: the matches are picked up by id once history answers again
+        log.warning("Match history for %s has failed since %s (%s); counting from the totals for now.",
+                    tp.name, since.isoformat(timespec="minutes"), error)
+        self._no_history_until[tp.id] = now + HISTORY_RETRY
+        del self._history_failing_since[tp.id]
+        ref = self._history_ref.pop(tp.id, None)
+        if ref is not None and ref.sources == snap.sources:
+            return diff_boards(ref, snap)  # everything since history last worked, nothing lost in between
+        return totals
 
     async def _update_operators(
         self, tp: TrackedPlayer, prev: Snapshot | None, snap: Snapshot, now: datetime, new_matches: bool,
@@ -478,7 +508,7 @@ class Tracker:
         """
         key = f"session_announced_at:{tp.id}"
         current = self.storage.get_player(tp.id) or tp
-        announced_until = _when(self.storage.get_setting(key)) or current.added_at
+        announced_until = _when(self.storage.get_setting(key)) or self._legacy_announced(tp.id) or current.added_at
         events = self.storage.match_events(tp.id, since=announced_until - timedelta(hours=12))
         groups = group_sessions(events, self.session_gap)
         if not groups:
@@ -489,6 +519,14 @@ class Tracker:
         self.storage.set_setting(key, end.isoformat())
         session = self._with_operators(tp, groups[-1])
         return session if session.matches >= min_matches else None
+
+    def _legacy_announced(self, player_id: int) -> datetime | None:
+        """Earlier versions remembered the last announced session by event id; carry that over."""
+        legacy = self.storage.get_setting(f"session_announced:{player_id}")
+        if not legacy:
+            return None
+        events = [e for e in self.storage.match_events(player_id) if e.id is not None and e.id <= int(legacy)]
+        return max((e.detected_at for e in events), default=None)
 
     def daily(self, tp: TrackedPlayer, days: int, tz: tzinfo) -> list[DayStats]:
         today = datetime.now(tz).date()

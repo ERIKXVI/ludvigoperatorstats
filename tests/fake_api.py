@@ -34,6 +34,7 @@ class FakeApis:
         self.no_match_history = False
         self.matches_down = False
         self.missing_page: int | None = None  # this page of match history answers 404
+        self.ids_supported = True  # whether lookups by Ubisoft id work (unverified for the real API)
         self.redirect = False  # answer with a redirect to another path that records what it receives
         self.leaked: list[str | None] = []
         self.next_id = 100
@@ -106,7 +107,8 @@ class FakeApis:
         if request.match_info["slug"] not in ("ubi", "psn", "xbl"):
             return web.json_response({"errors": [{"code": "CollectorResultStatus::InvalidPlatform"}]}, status=400)
         current_id = self.profile["data"]["platformInfo"]["platformUserId"]
-        if who.lower() != self.name.lower() and who != current_id:
+        by_id_ok = self.ids_supported and who == current_id
+        if who.lower() != self.name.lower() and not by_id_ok:
             return web.json_response({"errors": [{"code": "CollectorResultStatus::NotFound",
                                                   "message": "This profile could not be found."}]}, status=404)
         return None

@@ -29,6 +29,8 @@ GAMEMODE_BOARDS = {
 }
 
 PLATFORM_SLUGS = {"uplay": "ubi", "psn": "psn", "xbl": "xbl"}
+# A match's missing "previous RP" is only taken from an older match that ended at most this long before.
+FILL_FROM_WITHIN = timedelta(hours=3)
 SLUG_PLATFORMS = {"ubi": "uplay", "uplay": "uplay", "psn": "psn", "xbl": "xbl"}
 
 _PLAYSTYLE = re.compile(r"playstyle(Attacker|Defender)(\w+)")
@@ -277,10 +279,14 @@ def parse_matches(payload: Any, player: PlayerInfo) -> tuple[list[MatchBatch], i
             if b:
                 out.append(b)
     # Sometimes the "previous" RP/rank of a match is null. The next older match on the same
-    # playlist ended where this one started, so take it from there.
+    # playlist ended where this one started, so take it from there, if it has rank data and
+    # was played shortly before (never across a long break, which could be a new season).
     for i, b in enumerate(out):
+        # Only the match right before it: if that one has no rank data, the RP in between is unknown.
         older = next((o for o in out[i + 1:] if o.board == b.board), None)
-        if older is None:
+        if older is None or older.extra.get("no_rank") or b.window_start is None or not (
+            timedelta(0) <= b.window_start - older.detected_at <= FILL_FROM_WITHIN
+        ):
             continue
         if b.extra.get("rp_unknown"):
             b.rp_before = older.rp_after
@@ -333,10 +339,13 @@ def _match(m: dict, me: str | None, name: str) -> MatchBatch | None:
     ) if count(st, key)}
     if meta.get("isSurrender") or meta.get("isForfeit"):
         extra["surrender"] = True
-    if not rp_known and _node(st, "rankPoints"):
-        extra["rp_unknown"] = True
-    if not rank_known and _node(st, "rank"):
-        extra["rank_unknown"] = True
+    if not _node(st, "rankPoints"):
+        extra["no_rank"] = True  # no rank data at all for this match: nothing to show or to fill from
+    else:
+        if not rp_known:
+            extra["rp_unknown"] = True
+        if not rank_known:
+            extra["rank_unknown"] = True
 
     return MatchBatch(
         board=board_of(attrs),
