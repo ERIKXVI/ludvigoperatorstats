@@ -2,33 +2,27 @@
 
 A Rainbow Six Siege stats tracker with a Discord bot. It watches a player (Ludvig, by default) and:
 
-- **Counts every match he plays** and posts it in Discord: win/loss, kills/deaths, RP gained or lost, and which operators he played.
-- Tracks **rank, RP, peak rank, K/D, wins/losses/abandons** for every playlist (Ranked, Quick Match, Unranked, Dual Front, events).
+- **Records every match he plays** and posts it in Discord: map, win/loss and round score, kills/deaths/assists, headshots, RP gained or lost, rank-ups, the operators he played, and highlights like aces and clutches.
+- Tracks **rank, RP, peak rank, K/D, wins/losses/abandons** for every playlist (Ranked, Quick Match, Standard, Dual Front, Siege Cup, Arcade), plus lifetime totals and his playstyle.
 - Tracks **per-operator stats**: rounds, win %, K/D, headshot %, opening kills/deaths, clutches, aces, multi-kills and time played, with the operator icons from [r6operators](https://r6operators.marcopixel.eu/).
 - Groups matches into **play sessions** and posts a summary when he stops ("6 matches, 4W 2L, K/D 1.37, +64 RP… 💪 Solid.").
 - Keeps a **history**: matches per day, K/D per day and RP over time, as charts.
 - Has **"Ludvig complained" / "Ludvig argued" buttons** under its messages. Press one and a pop-up asks what he complained or argued about, who or what got the blame, and the exact quote. The bot counts them and shows the totals, top topics, who got blamed most, and whether it happens after wins or losses.
 - Includes a **terminal program** (`r6tracker`) that does everything without Discord too, including CSV export.
 
-## How it works (and what it can't do)
+## Where the stats come from
 
-Neither Ubisoft nor anyone else offers a public match-history API for Siege. What *is* available are running totals, like "34 ranked wins this season". So the tracker checks every few minutes and compares the numbers. When wins + losses + abandons go up, that's a new match, and the changes in kills, deaths and RP show how it went.
+All stats come from **[R6 Tracker](https://r6.tracker.network) (Tracker Network)** through its official API, using your `TRN_API_KEY`:
 
-What that means in practice:
+- **Profile:** level, playtime, lifetime totals, playstyle, and this season's rank, RP and W/L per playlist.
+- **Operators:** rounds, win %, K/D, headshots, clutches and more per operator, for any season and playlist.
+- **Match history:** every match with map, score, K/D/A, RP change and operators. The bot checks it every few minutes and posts each match it hasn't seen yet. When it first starts, it saves his recent matches as history without posting them.
 
-- Only matches played **while the tracker is running** get counted. Run it on something that stays on: [Google Cloud](#run-it-on-google-cloud-247), a PC, a Raspberry Pi, or any server with Docker.
-- If two matches finish between two checks, they show up as one update ("2 matches, 1W 1L"). With the default 5-minute interval that's rare, because a Siege match lasts longer than that.
-- Operator stats come from a separate source that sometimes updates a few minutes after the match. The bot keeps checking for 30 minutes after each match and posts the operators when they show up.
-- These APIs are unofficial. If Ubisoft changes something, a fix may be needed.
+> **About the API key:** create an app on [tracker.gg/developers](https://tracker.gg/developers) to get a key, sent in the `TRN-Api-Key` header. Tracker Network decides which games each key may read, and their public docs don't list Rainbow Six Siege, so **your key has to have R6 access**. If it doesn't, the bot says so plainly ("This TRN API key isn't allowed to read Rainbow Six Siege data"). The bot only uses the official API, never the tracker.gg website, which Tracker Network's terms don't allow.
 
-### Where the stats come from
+**Backup source:** if you leave `TRN_API_KEY` empty and set `ARENYZE_API_KEY` (free from [r6.arenyze.com](https://r6.arenyze.com)), the bot uses Arenyze instead. Arenyze has no match history, so the bot then works out matches from the season totals. It notices when wins + losses go up and reports the change in kills, deaths and RP, but without map or score.
 
-| Source | What it gives | What you need |
-|---|---|---|
-| **Ubisoft's own API** | rank, RP, peak, K/D, W/L/abandons per playlist, level, playtime, commendations, battle pass level | A Ubisoft account for the bot to log in with. Use a **spare account without 2-step verification**. Your password is only sent to Ubisoft; the bot caches the session ticket, never the password. |
-| **[Arenyze R6 API](https://r6.arenyze.com)** | per-operator stats (Ubisoft's API stopped serving these), and rank/K/D as a fallback | A free API key from r6.arenyze.com |
-
-Set up at least one. Set up both to get everything.
+Either way, only matches played **while the bot is running** get posted live. Run it on something that stays on: [Google Cloud](#run-it-on-google-cloud-247), a PC, a Raspberry Pi, or any server with Docker. With R6 Tracker's match history, matches from short outages are picked up on the next check.
 
 ## Setup
 
@@ -61,7 +55,7 @@ No privileged intents are needed.
 cp .env.example .env
 ```
 
-Fill in `.env`: the Discord token, your Ubisoft spare-account login and/or the Arenyze API key, and `TRACK_PLAYERS=Ludvig` (use his exact Ubisoft name). The file explains every setting. Set `DISCORD_GUILD_ID` to your server's ID to make the slash commands show up instantly. To get the ID, turn on Developer Mode in Discord, then right-click the server and choose **Copy Server ID**.
+Fill in `.env`: the Discord token, your `TRN_API_KEY`, and `TRACK_PLAYERS=Ludvig` (use his exact Ubisoft name). The file explains every setting. Set `DISCORD_GUILD_ID` to your server's ID to make the slash commands show up instantly. To get the ID, turn on Developer Mode in Discord, then right-click the server and choose **Copy Server ID**.
 
 ### 4. Run
 
@@ -165,15 +159,15 @@ pip install -e ".[dev]"
 pytest
 ```
 
-The tests include a fake Ubisoft + Arenyze server (`tests/fake_api.py`), so the login flow, ticket refresh, match detection, the CLI and the complaint pop-up are all tested without real accounts.
+The tests include a fake R6 Tracker + Arenyze server (`tests/fake_api.py`) serving real R6 Tracker response layouts with the player's identity replaced. Match detection, error handling (bad key, no R6 access, renamed player), the CLI and the complaint pop-up are all tested without real accounts.
 
 Project layout:
 
 ```
 r6tracker/
-  sources/     Ubisoft + Arenyze API clients and JSON parsing
+  sources/     R6 Tracker (Tracker Network) + Arenyze API clients and JSON parsing
   fetcher.py   combines the sources into one snapshot
-  tracker.py   match detection (diffing snapshots), sessions, daily stats
+  tracker.py   new matches from match history (or from diffing totals), sessions, daily stats
   storage.py   SQLite: players, snapshots, matches, operator rounds, complaints
   charts.py    matplotlib charts
   bot/         Discord bot: slash commands, embeds, complain/argue buttons
@@ -185,5 +179,5 @@ deploy/gcp/    one-command Google Cloud deployment (VM + systemd service)
 ## Credits
 
 - Operator icons and metadata: [r6operators](https://github.com/marcopixel/r6operators) by Marco Vockner (MIT). See `r6tracker/data/ICONS_LICENSE.txt`.
-- Ubisoft API details: [siegeapi](https://github.com/CNDRD/siegeapi). Operator stats: [Arenyze / r6-data.js](https://github.com/mazeor9/r6-data.js).
+- Stats powered by [Tracker Network](https://tracker.gg) (R6 Tracker). Backup source: [Arenyze / r6-data.js](https://github.com/mazeor9/r6-data.js).
 - Not affiliated with Ubisoft. Rainbow Six Siege is a trademark of Ubisoft Entertainment.

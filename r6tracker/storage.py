@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS match_events (
     rank_after   INTEGER,
     rp_before    INTEGER,
     rp_after     INTEGER
+    -- + the MATCH_COLUMNS below, added by _migrate()
 );
 CREATE INDEX IF NOT EXISTS match_events_player ON match_events (player_id, detected_at);
 
@@ -152,6 +153,22 @@ def _dt(s: str | None) -> datetime | None:
     return datetime.fromisoformat(s) if s else None
 
 
+# Details of real matches (from a match-history source). Added to match_events by _migrate(), so
+# databases created by older versions get them too.
+MATCH_COLUMNS = {
+    "match_id": "TEXT",
+    "map_name": "TEXT",
+    "board_name": "TEXT",
+    "duration_seconds": "INTEGER",
+    "assists": "INTEGER",
+    "headshots": "INTEGER",
+    "rounds_won": "INTEGER",
+    "rounds_lost": "INTEGER",
+    "operators": "TEXT",  # JSON list
+    "extra": "TEXT",  # JSON object
+}
+
+
 def _batch(r: sqlite3.Row) -> MatchBatch:
     return MatchBatch(
         id=r["id"], board=r["board"], season_id=r["season_id"] or 0, matches=r["matches"], wins=r["wins"],
@@ -159,6 +176,11 @@ def _batch(r: sqlite3.Row) -> MatchBatch:
         rank_before=r["rank_before"] or 0, rank_after=r["rank_after"] or 0,
         rp_before=r["rp_before"] or 0, rp_after=r["rp_after"] or 0,
         detected_at=_dt(r["detected_at"]) or utcnow(), window_start=_dt(r["window_start"]),
+        match_id=r["match_id"], map_name=r["map_name"], board_name=r["board_name"],
+        duration_seconds=r["duration_seconds"] or 0, assists=r["assists"] or 0, headshots=r["headshots"] or 0,
+        rounds_won=r["rounds_won"] or 0, rounds_lost=r["rounds_lost"] or 0,
+        operators=json.loads(r["operators"]) if r["operators"] else [],
+        extra=json.loads(r["extra"]) if r["extra"] else {},
     )
 
 
@@ -180,7 +202,21 @@ class Storage:
         if str(path) != ":memory:":
             self.db.execute("PRAGMA journal_mode = WAL")
         self.db.executescript(SCHEMA)
+        self._migrate()
         self.db.commit()
+
+    def _migrate(self) -> None:
+        have = {r["name"] for r in self.db.execute("PRAGMA table_info(match_events)")}
+        for col, kind in MATCH_COLUMNS.items():
+            if col not in have:
+                self.db.execute(f"ALTER TABLE match_events ADD COLUMN {col} {kind}")
+        self.db.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS match_events_match ON match_events (player_id, match_id) "
+            "WHERE match_id IS NOT NULL"
+        )
+        have = {r["name"] for r in self.db.execute("PRAGMA table_info(complaints)")}
+        if "category" not in have:
+            self.db.execute("ALTER TABLE complaints ADD COLUMN category TEXT")
 
     def close(self) -> None:
         self.db.close()
@@ -310,16 +346,36 @@ class Storage:
     def add_match_batch(self, player_id: int, b: MatchBatch) -> MatchBatch:
         cur = self.db.execute(
             "INSERT INTO match_events (player_id, detected_at, window_start, board, season_id, matches, wins, "
-            "losses, abandons, kills, deaths, rank_before, rank_after, rp_before, rp_after) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "losses, abandons, kills, deaths, rank_before, rank_after, rp_before, rp_after, match_id, map_name, "
+            "board_name, duration_seconds, assists, headshots, rounds_won, rounds_lost, operators, extra) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 player_id, _ts(b.detected_at), _ts(b.window_start), b.board, b.season_id, b.matches, b.wins,
                 b.losses, b.abandons, b.kills, b.deaths, b.rank_before, b.rank_after, b.rp_before, b.rp_after,
+                b.match_id, b.map_name, b.board_name, b.duration_seconds, b.assists, b.headshots, b.rounds_won,
+                b.rounds_lost, json.dumps(b.operators) if b.operators else None,
+                json.dumps(b.extra) if b.extra else None,
             ),
         )
         self.db.commit()
         b.id = cur.lastrowid
         return b
+
+    def known_match_ids(self, player_id: int, match_ids: Iterable[str]) -> set[str]:
+        ids = [m for m in match_ids if m]
+        if not ids:
+            return set()
+        marks = ",".join("?" * len(ids))
+        rows = self.db.execute(
+            f"SELECT match_id FROM match_events WHERE player_id = ? AND match_id IN ({marks})", (player_id, *ids)
+        )
+        return {r["match_id"] for r in rows}
+
+    def has_real_matches(self, player_id: int) -> bool:
+        row = self.db.execute(
+            "SELECT 1 FROM match_events WHERE player_id = ? AND match_id IS NOT NULL LIMIT 1", (player_id,)
+        ).fetchone()
+        return row is not None
 
     def match_events(
         self, player_id: int, since: datetime | None = None, until: datetime | None = None, after_id: int = 0

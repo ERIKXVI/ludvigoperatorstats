@@ -206,3 +206,80 @@ def test_failing_operator_source_backs_off(storage, fetcher):
     run(tr.poll(tp))
     run(tr.poll(tp))
     assert fetcher.operator_calls == 1  # not retried every poll
+
+
+# ------------------------------------------------------------ match history
+
+
+def test_first_look_saves_history_without_announcing(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = [real_match(n, minutes_ago=60 * 24 + n * 30) for n in range(3)]  # yesterday's session
+    tp, first = run(tr.add_player("Ludvig"))
+    assert first.real_matches and not first.batches and len(first.backfilled) == 3 and not first.has_news
+    assert [e.match_id for e in storage.match_events(tp.id)] == ["m2", "m1", "m0"]  # stored oldest first
+    assert tr.finished_session(tp) is None  # old history isn't announced as a "session over" either
+
+
+def test_new_real_matches_are_detected_once(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = [real_match(0, minutes_ago=120)]
+    tp, _ = run(tr.add_player("Ludvig"))
+
+    fetcher.history = [real_match(2, minutes_ago=2, won=False), real_match(1, minutes_ago=30)] + fetcher.history
+    fetcher.boards = {"ranked": ranked(wins=11, losses=9)}  # totals moved too; must NOT double count
+    res = run(tr.poll(tp))
+    assert res.real_matches and res.has_news
+    assert [(b.match_id, b.result_text, b.map_name) for b in res.batches] == [("m1", "WIN", "Villa"), ("m2", "LOSS", "Villa")]
+    assert storage.count_tracked_matches(tp.id) == 3
+
+    again = run(tr.poll(tp))
+    assert not again.batches and not again.has_news
+    session, ongoing = tr.last_session(tp)
+    assert ongoing and session.matches == 2 and session.operator_counts == [("Ash", 2)] and session.maps == [("Villa", 2)]
+
+
+def test_catching_up_reads_more_pages(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher)
+    fetcher.page_size = 2
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = [real_match(0, minutes_ago=600)]
+    tp, _ = run(tr.add_player("Ludvig"))
+    fetcher.history = [real_match(n, minutes_ago=600 - n * 30) for n in range(5, 0, -1)] + fetcher.history
+    res = run(tr.poll(tp))
+    assert [b.match_id for b in res.batches] == ["m1", "m2", "m3", "m4", "m5"]  # 3 pages, oldest first
+    assert fetcher.matches_calls == 1 + 3
+
+
+def test_match_history_errors_dont_fall_back_to_totals(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = [real_match(0)]
+    tp, _ = run(tr.add_player("Ludvig"))
+    fetcher.matches_error = SourceError("R6 Tracker hiccup")
+    fetcher.boards = {"ranked": ranked(wins=11)}
+    res = run(tr.poll(tp))
+    assert res.real_matches and not res.batches  # no guessed match from the totals...
+    assert "hiccup" in storage.get_player(tp.id).last_error
+    fetcher.matches_error = None
+    fetcher.history = [real_match(1, minutes_ago=3)] + fetcher.history
+    assert [b.match_id for b in run(tr.poll(tp)).batches] == ["m1"]  # ...the real one shows up next time
+
+
+def test_without_match_history_totals_are_used(storage, fetcher):
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    tp, _ = run(tr.add_player("Ludvig"))  # fetcher.history is None: source has no match history
+    back_in_time(storage, tp.id, 30)
+    fetcher.boards = {"ranked": ranked(wins=11)}
+    res = run(tr.poll(tp))
+    assert not res.real_matches and [(b.matches, b.match_id) for b in res.batches] == [(1, None)]

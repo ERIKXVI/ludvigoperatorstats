@@ -22,7 +22,7 @@ from ..formatting import (
     verdict,
     wl,
 )
-from ..models import BOARD_LABELS, MatchBatch, OperatorDelta, OperatorStats, PlayerInfo, Snapshot, board_label, season_code
+from ..models import BOARD_LABELS, MatchBatch, OperatorDelta, OperatorStats, PlayerInfo, Snapshot, pct, season_code
 from ..ranks import rank_color, rank_name
 from ..storage import COMPLAINT_CATEGORIES, Complaint, TrackedPlayer
 from ..tracker import PlaySummary, PollResult
@@ -114,6 +114,76 @@ def match_embed(result: PollResult, tz: tzinfo, operators_enabled: bool = True) 
     return embed
 
 
+RESULT_ICONS = {"WIN": "🏆", "LOSS": "💀", "ABANDON": "🏃"}
+PLAYSTYLES = {
+    "breacher": "Breacher", "entry_fragger": "Entry Fragger", "intel_provider": "Intel Provider",
+    "roam_clearer": "Roam Clearer", "supporter": "Supporter", "utility_clearer": "Utility Clearer",
+    "debuffer": "Debuffer", "entry_denier": "Entry Denier", "trapper": "Trapper", "utility_denier": "Utility Denier",
+}
+
+
+def _highlights(b: MatchBatch) -> str:
+    x = b.extra
+    bits = []
+    if x.get("aces"):
+        bits.append(f"🔥 {plural(x['aces'], 'ace')}")
+    for n in (5, 4, 3):
+        if x.get(f"kills_{n}k"):
+            bits.append(f"{x[f'kills_{n}k']}× {n}K round")
+    if x.get("clutches"):
+        bits.append(f"🧊 {plural(x['clutches'], 'clutch', 'clutches')}")
+    if x.get("first_bloods"):
+        bits.append(f"⚡ {plural(x['first_bloods'], 'opening kill')}")
+    if x.get("first_deaths"):
+        bits.append(f"☠️ died first {plural(x['first_deaths'], 'time')}")
+    if x.get("team_kills"):
+        bits.append(f"🙃 {plural(x['team_kills'], 'team kill')}")
+    return " · ".join(bits)
+
+
+def real_match_embed(player: PlayerInfo, b: MatchBatch, snap: Snapshot | None = None) -> discord.Embed:
+    """One real match from match history: map, score, K/D/A, RP and operators."""
+    where = f" on {b.map_name}" if b.map_name else ""
+    title = {
+        "WIN": f"🏆 {player.name} won a {b.label} match{where}",
+        "LOSS": f"💀 {player.name} lost a {b.label} match{where}",
+    }.get(b.result_text, f"🏃 {player.name} left a {b.label} match{where}")
+    lines = []
+    score = []
+    if b.rounds_won or b.rounds_lost:
+        score.append(f"**{b.rounds_won}–{b.rounds_lost}** in rounds")
+    if b.extra.get("surrender"):
+        score.append("ended by surrender")
+    if b.duration_seconds:
+        score.append(f"{b.duration_seconds // 60} min")
+    if score:
+        lines.append(" · ".join(score))
+    lines.append(f"**K/D/A** {b.kills} / {b.deaths} / {b.assists} ({b.kd:.2f})")
+    if b.kills:
+        lines.append(f"**Headshots** {b.headshots} ({pct(b.headshots, b.kills):.0f}% of kills)")
+    if b.board == "ranked" and (b.rp_before or b.rp_after):
+        lines.append(f"**Rank** {rank_change(b)}")
+    embed = discord.Embed(
+        title=title, description="\n".join(lines), color=_color_for(b.wins, b.losses, b.abandons), timestamp=b.detected_at
+    )
+    _author(embed, player)
+    if b.operators:
+        embed.add_field(
+            name="Operators",
+            value=clip(" · ".join(f"{side_emoji(opmeta.side_of(o))} {o}" for o in b.operators), FIELD_MAX),
+            inline=False,
+        )
+    h = _highlights(b)
+    if h:
+        embed.add_field(name="Highlights", value=h, inline=False)
+    board = snap.boards.get(b.board) if snap else None
+    if board and board.matches:
+        embed.add_field(name=f"{board.label} this season", value=board_line(board), inline=False)
+    _thumb(embed, b.operators, player)
+    embed.set_footer(text="Press a button below to complain or argue")
+    return embed
+
+
 def operators_update_embed(result: PollResult) -> discord.Embed:
     """Posted when operator numbers move after the match itself was already announced."""
     snap = result.snapshot
@@ -127,6 +197,22 @@ def operators_update_embed(result: PollResult) -> discord.Embed:
     _author(embed, snap.player)
     _thumb(embed, [d.name for d in result.operator_deltas], snap.player)
     return embed
+
+
+def news_embeds(result: PollResult, tz: tzinfo, operators_enabled: bool = True) -> list[discord.Embed]:
+    """What to post about a poll: one embed per real match (or one combined embed)."""
+    snap = result.snapshot
+    if snap is None or result.first_poll:
+        return []
+    if result.real_matches and result.batches:
+        if len(result.batches) <= 5:
+            return [real_match_embed(snap.player, b, snap) for b in result.batches]
+        return [match_embed(result, tz, operators_enabled=False)]
+    if result.batches:
+        return [match_embed(result, tz, operators_enabled)]
+    if result.operator_deltas and not result.real_matches:
+        return [operators_update_embed(result)]
+    return []
 
 
 def summary_embed(player: PlayerInfo, s: PlaySummary, tz: tzinfo, title: str, empty: str) -> discord.Embed:
@@ -150,10 +236,16 @@ def summary_embed(player: PlayerInfo, s: PlaySummary, tz: tzinfo, title: str, em
         line = f"{part.matches} · {wl(part.wins, part.losses, part.abandons)} · K/D {part.kd:.2f}"
         if board == "ranked" and s.rank_after is not None:
             line += f"\n{rank_name(s.rank_before)} → **{rank_name(s.rank_after)}** ({signed(s.rp_change)} RP)"
-        embed.add_field(name=board_label(board), value=line, inline=True)
-    if s.operators:
+        embed.add_field(name=part.events[0].label, value=line, inline=True)
+    counts = s.operator_counts
+    if counts:
+        lines = [f"{side_emoji(opmeta.side_of(o))} **{o}** ×{n}" for o, n in counts[:10]]
+        embed.add_field(name="Operators played (matches)", value=clip("\n".join(lines), FIELD_MAX), inline=True)
+    elif s.operators:
         embed.add_field(name="Operators", value=_op_delta_lines(s.operators), inline=False)
-    _thumb(embed, [o.name for o in s.operators], player)
+    if s.maps:
+        embed.add_field(name="Maps", value=clip("\n".join(f"{m} ×{n}" for m, n in s.maps[:8]), FIELD_MAX), inline=True)
+    _thumb(embed, [o for o, _ in counts] or [o.name for o in s.operators], player)
     return embed
 
 
@@ -197,6 +289,24 @@ def stats_embed(
     total = snap.total
     if total.matches:
         embed.add_field(name="📊 Season total (all playlists)", value=board_line(total), inline=False)
+    if snap.lifetime and snap.lifetime.matches:
+        life = [board_line(snap.lifetime)]
+        x = snap.extras
+        more = []
+        if x.get("headshot_pct"):
+            more.append(f"{x['headshot_pct']:.0f}% headshots")
+        if x.get("assists"):
+            more.append(f"{int(x['assists']):,} assists")
+        if x.get("wallbangs"):
+            more.append(f"{int(x['wallbangs']):,} wallbangs")
+        if x.get("team_kills"):
+            more.append(f"{int(x['team_kills']):,} team kills 🙃")
+        if more:
+            life.append(" · ".join(more))
+        embed.add_field(name="📚 Lifetime", value="\n".join(life), inline=False)
+    style = _playstyle(snap.playstyles)
+    if style:
+        embed.add_field(name="🧠 Playstyle", value=style, inline=False)
 
     tracked = f"Today: **{plural(today.matches, 'match', 'matches')}**"
     if today.matches:
@@ -219,8 +329,21 @@ def stats_embed(
         extras.append(f"⏱️ {hours(snap.pvp_seconds)} in PvP")
     if extras:
         embed.add_field(name="Other", value=" · ".join(extras), inline=False)
+    if snap.name_changes:
+        embed.add_field(name="Formerly known as", value=clip(", ".join(snap.name_changes[:5]), 200), inline=False)
     embed.set_footer(text="Stats from " + " + ".join(snap.sources) if snap.sources else "")
     return embed
+
+
+def _playstyle(styles: dict[str, int]) -> str:
+    """Most frequent attacker and defender playstyle, e.g. "⚔️ Entry Fragger · 🛡️ Trapper"."""
+    out = []
+    for side in ("attacker", "defender"):
+        mine = {k.split("_", 1)[1]: v for k, v in styles.items() if k.startswith(side + "_")}
+        if mine:
+            top = max(mine, key=lambda k: mine[k])
+            out.append(f"{side_emoji(side)} {PLAYSTYLES.get(top, top.replace('_', ' ').title())}")
+    return " · ".join(out)
 
 
 def ranked_embed(snap: Snapshot) -> discord.Embed:
@@ -316,15 +439,18 @@ def matches_embed(player: PlayerInfo, events: list[MatchBatch], tz: tzinfo) -> d
     if not events:
         embed.description = "No matches tracked yet. They show up here once the bot sees new games."
         return embed
-    icons = {"WIN": "🏆", "LOSS": "💀", "ABANDON": "🏃"}
     lines = []
     for e in reversed(events):
-        line = f"`{local(e.detected_at, tz)}` {icons.get(e.result_text, '🎮')} **{e.label}** {e.result_text} — {e.kills}/{e.deaths}"
+        where = f" on {e.map_name}" if e.map_name else ""
+        score = f" {e.rounds_won}–{e.rounds_lost}" if e.rounds_won or e.rounds_lost else ""
+        line = (f"`{local(e.detected_at, tz)}` {RESULT_ICONS.get(e.result_text, '🎮')} **{e.label}**{where}"
+                f"{score} — {e.kills}/{e.deaths}")
         if e.board == "ranked" and e.rp_change:
             line += f" ({signed(e.rp_change)} RP)"
         lines.append(line)
     embed.description = clip("\n".join(lines), 4000)
-    embed.set_footer(text="A line can cover several matches when they finished between two checks.")
+    if any(not e.match_id for e in events):
+        embed.set_footer(text="A line without a map can cover several matches that finished between two checks.")
     return embed
 
 

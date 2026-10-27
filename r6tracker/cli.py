@@ -130,14 +130,23 @@ def print_poll(result: PollResult, app: App) -> None:
         print(f"[{stamp}] {name}: couldn't fetch stats: {result.error}")
         return
     if result.first_poll:
-        print(f"[{stamp}] {name}: baseline saved; new matches will be detected from now on.")
+        extra = f" (and {plural(len(result.backfilled), 'recent match', 'recent matches')} saved as history)" \
+            if result.backfilled else ""
+        print(f"[{stamp}] {name}: baseline saved{extra}; new matches will be detected from now on.")
         return
     for b in result.batches:
-        line = f"[{stamp}] {name}: {b.label} {b.result_text} ({b.matches} match{'es' * (b.matches != 1)}) — K/D {b.kills}/{b.deaths}"
-        if b.board == "ranked":
+        if b.match_id:
+            where = f" on {b.map_name}" if b.map_name else ""
+            score = f" {b.rounds_won}-{b.rounds_lost}" if b.rounds_won or b.rounds_lost else ""
+            line = f"[{stamp}] {name}: {b.label} {b.result_text}{where}{score} — K/D/A {b.kills}/{b.deaths}/{b.assists}"
+            if b.operators:
+                line += f" · {', '.join(b.operators)}"
+        else:
+            line = f"[{stamp}] {name}: {b.label} {b.result_text} ({plural(b.matches, 'match', 'matches')}) — K/D {b.kills}/{b.deaths}"
+        if b.board == "ranked" and (b.rp_before or b.rp_after):
             line += " · " + plain(rank_change(b))
         print(line)
-    if result.operator_deltas:
+    if result.operator_deltas and not result.real_matches:
         ops = ", ".join(f"{d.name} ({d.rounds} rds, {d.kills}/{d.deaths})" for d in result.operator_deltas[:8])
         print(f"[{stamp}] {name}: operators played: {ops}")
     if not result.has_news:
@@ -157,8 +166,12 @@ def print_summary(title: str, s: PlaySummary, app: App) -> None:
         print(f"  Ranked RP: {s.rp_change:+d}")
     for board, part in s.by_board.items():
         print(f"  {BOARD_LABELS.get(board, board)}: {part.matches} · {wl(part.wins, part.losses, part.abandons)} · K/D {part.kd:.2f}")
-    if s.operators:
+    if s.operator_counts:
+        print("  Operators: " + ", ".join(f"{o} ×{n}" for o, n in s.operator_counts[:8]))
+    elif s.operators:
         print("  Operators: " + ", ".join(f"{d.name} ({d.rounds} rds)" for d in s.operators[:8]))
+    if s.maps:
+        print("  Maps: " + ", ".join(f"{m} ×{n}" for m, n in s.maps[:8]))
     v = verdict(s.kd, s.win_rate, s.matches)
     if v:
         print(f"  {v}")
@@ -290,9 +303,13 @@ async def cmd_matches(settings: Settings, args) -> None:
         if not events:
             print("No matches tracked yet.")
         for e in events:
-            line = f"{local(e.detected_at, app.settings.tz)}  {e.label:<12} {e.result_text:<8} {e.kills:>3}/{e.deaths:<3}"
-            if e.board == "ranked":
+            score = f"{e.rounds_won}-{e.rounds_lost}" if e.rounds_won or e.rounds_lost else ""
+            line = (f"{local(e.detected_at, app.settings.tz)}  {e.label:<12} {e.result_text:<8} {(e.map_name or ''):<14}"
+                    f"{score:>5} {e.kills:>3}/{e.deaths:<3}")
+            if e.board == "ranked" and (e.rp_before or e.rp_after):
                 line += f"  {e.rp_change:+d} RP"
+            if e.operators:
+                line += f"  {', '.join(e.operators)}"
             print(line)
 
 
@@ -343,11 +360,14 @@ async def cmd_export(settings: Settings, args) -> None:
         out.mkdir(parents=True, exist_ok=True)
         with open(out / "matches.csv", "w", newline="") as f:
             w = csv.writer(f)
-            w.writerow(["detected_at", "playlist", "season", "matches", "wins", "losses", "abandons", "kills",
-                        "deaths", "rank_before", "rank_after", "rp_before", "rp_after"])
+            w.writerow(["ended_at", "playlist", "season", "matches", "wins", "losses", "abandons", "kills",
+                        "deaths", "assists", "headshots", "rounds_won", "rounds_lost", "map", "operators",
+                        "rank_before", "rank_after", "rp_before", "rp_after", "match_id"])
             for e in app.storage.match_events(tp.id):
                 w.writerow([e.detected_at.isoformat(), e.board, season_code(e.season_id), e.matches, e.wins, e.losses,
-                            e.abandons, e.kills, e.deaths, e.rank_before, e.rank_after, e.rp_before, e.rp_after])
+                            e.abandons, e.kills, e.deaths, e.assists, e.headshots, e.rounds_won, e.rounds_lost,
+                            e.map_name or "", "|".join(e.operators), e.rank_before, e.rank_after, e.rp_before,
+                            e.rp_after, e.match_id or ""])
         with open(out / "operators_played.csv", "w", newline="") as f:
             w = csv.writer(f)
             w.writerow(["detected_at", "operator", "side", "rounds", "rounds_won", "kills", "deaths", "headshots",
@@ -416,7 +436,8 @@ def build_parser() -> argparse.ArgumentParser:
     a = sub.add_parser("operators", help="operator table")
     a.add_argument("name", nargs="?")
     a.add_argument("--season", default="current", help="current (default), all, or e.g. Y11S2")
-    a.add_argument("--playlist", default="all", choices=["all", "ranked", "standard", "unranked", "dual-front"])
+    a.add_argument("--playlist", default="all",
+                   choices=["all", "ranked", "quick-match", "standard", "dual-front", "siege-cup"])
     a.add_argument("--side", default="all", choices=["all", "attacker", "defender"])
     a.add_argument("--sort", default="rounds", choices=["rounds", "kd", "winrate", "kills", "headshots"])
     a.add_argument("--limit", type=int, default=20)

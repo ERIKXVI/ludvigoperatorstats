@@ -1,0 +1,829 @@
+{
+ "_note": "Shape based on how r6s-stats-api, python-discord-scheduler-bot and jakal parse /segments/operator; not a captured response.",
+ "data": [
+  {
+   "type": "operator",
+   "attributes": {
+    "operator": "ash",
+    "side": "attacker",
+    "gamemode": "all",
+    "season": 43,
+    "sessionType": "all"
+   },
+   "metadata": {
+    "operatorName": "Ash",
+    "operatorImageUrl": "https://trackercdn.com/cdn/r6.tracker.network/operators/badges/ash.png"
+   },
+   "expiryDate": "2026-10-27T10:00:00+00:00",
+   "stats": {
+    "matchesPlayed": {
+     "displayName": "Matches",
+     "metadata": {},
+     "value": 30,
+     "displayValue": "30",
+     "displayType": "Number"
+    },
+    "matchesWon": {
+     "displayName": "Wins",
+     "metadata": {},
+     "value": 17,
+     "displayValue": "17",
+     "displayType": "Number"
+    },
+    "matchesLost": {
+     "displayName": "Losses",
+     "metadata": {},
+     "value": 13,
+     "displayValue": "13",
+     "displayType": "Number"
+    },
+    "winPercentage": {
+     "displayName": "Win %",
+     "metadata": {},
+     "value": 56.67,
+     "displayValue": "56.67",
+     "displayType": "NumberPercentage"
+    },
+    "timePlayed": {
+     "displayName": "Time Played",
+     "metadata": {},
+     "value": 11400000,
+     "displayValue": "11,400,000",
+     "displayType": "TimeMilliseconds"
+    },
+    "roundsPlayed": {
+     "displayName": "Rounds",
+     "metadata": {},
+     "value": 120,
+     "displayValue": "120",
+     "displayType": "Number"
+    },
+    "roundsWon": {
+     "displayName": "Rounds Won",
+     "metadata": {},
+     "value": 66,
+     "displayValue": "66",
+     "displayType": "Number"
+    },
+    "roundsLost": {
+     "displayName": "Rounds Lost",
+     "metadata": {},
+     "value": 54,
+     "displayValue": "54",
+     "displayType": "Number"
+    },
+    "roundWinPct": {
+     "displayName": "Round Win %",
+     "metadata": {},
+     "value": 55.0,
+     "displayValue": "55.00",
+     "displayType": "NumberPercentage"
+    },
+    "kills": {
+     "displayName": "Kills",
+     "metadata": {},
+     "value": 104,
+     "displayValue": "104",
+     "displayType": "Number"
+    },
+    "deaths": {
+     "displayName": "Deaths",
+     "metadata": {},
+     "value": 80,
+     "displayValue": "80",
+     "displayType": "Number"
+    },
+    "assists": {
+     "displayName": "Assists",
+     "metadata": {},
+     "value": 26,
+     "displayValue": "26",
+     "displayType": "Number"
+    },
+    "kdRatio": {
+     "displayName": "K/D",
+     "metadata": {},
+     "value": 1.3,
+     "displayValue": "1.30",
+     "displayType": "NumberPrecision2"
+    },
+    "headshotPct": {
+     "displayName": "HS %",
+     "metadata": {},
+     "value": 48.08,
+     "displayValue": "48.08",
+     "displayType": "NumberPercentage"
+    },
+    "killsPerRound": {
+     "displayName": "Kills/Round",
+     "metadata": {},
+     "value": 0.87,
+     "displayValue": "0.87",
+     "displayType": "NumberPrecision2"
+    },
+    "killsPerGame": {
+     "displayName": "Kills/Game",
+     "metadata": {},
+     "value": 3.47,
+     "displayValue": "3.47",
+     "displayType": "NumberPrecision2"
+    },
+    "aces": {
+     "displayName": "Aces",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "clutches": {
+     "displayName": "Clutches",
+     "metadata": {},
+     "value": 3,
+     "displayValue": "3",
+     "displayType": "Number"
+    },
+    "clutchesLost": {
+     "displayName": "Clutches Lost",
+     "metadata": {},
+     "value": 2,
+     "displayValue": "2",
+     "displayType": "Number"
+    },
+    "firstBloods": {
+     "displayName": "First Bloods",
+     "metadata": {},
+     "value": 20,
+     "displayValue": "20",
+     "displayType": "Number"
+    },
+    "firstDeaths": {
+     "displayName": "First Deaths",
+     "metadata": {},
+     "value": 13,
+     "displayValue": "13",
+     "displayType": "Number"
+    },
+    "teamKills": {
+     "displayName": "Team Kills",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "kills2K": {
+     "displayName": "2K",
+     "metadata": {},
+     "value": 9,
+     "displayValue": "9",
+     "displayType": "Number"
+    },
+    "kills3K": {
+     "displayName": "3K",
+     "metadata": {},
+     "value": 3,
+     "displayValue": "3",
+     "displayType": "Number"
+    },
+    "kills4K": {
+     "displayName": "4K",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "kills5K": {
+     "displayName": "5K",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "esr": {
+     "displayName": "ESR",
+     "metadata": {},
+     "value": 0.55,
+     "displayValue": "0.55",
+     "displayType": "NumberPrecision2"
+    }
+   }
+  },
+  {
+   "type": "operator",
+   "attributes": {
+    "operator": "jager",
+    "side": "defender",
+    "gamemode": "all",
+    "season": 43,
+    "sessionType": "all"
+   },
+   "metadata": {
+    "operatorName": "Jäger",
+    "operatorImageUrl": "https://trackercdn.com/cdn/r6.tracker.network/operators/badges/jager.png"
+   },
+   "expiryDate": "2026-10-27T10:00:00+00:00",
+   "stats": {
+    "matchesPlayed": {
+     "displayName": "Matches",
+     "metadata": {},
+     "value": 25,
+     "displayValue": "25",
+     "displayType": "Number"
+    },
+    "matchesWon": {
+     "displayName": "Wins",
+     "metadata": {},
+     "value": 14,
+     "displayValue": "14",
+     "displayType": "Number"
+    },
+    "matchesLost": {
+     "displayName": "Losses",
+     "metadata": {},
+     "value": 11,
+     "displayValue": "11",
+     "displayType": "Number"
+    },
+    "winPercentage": {
+     "displayName": "Win %",
+     "metadata": {},
+     "value": 56.0,
+     "displayValue": "56.00",
+     "displayType": "NumberPercentage"
+    },
+    "timePlayed": {
+     "displayName": "Time Played",
+     "metadata": {},
+     "value": 9000000,
+     "displayValue": "9,000,000",
+     "displayType": "TimeMilliseconds"
+    },
+    "roundsPlayed": {
+     "displayName": "Rounds",
+     "metadata": {},
+     "value": 90,
+     "displayValue": "90",
+     "displayType": "Number"
+    },
+    "roundsWon": {
+     "displayName": "Rounds Won",
+     "metadata": {},
+     "value": 50,
+     "displayValue": "50",
+     "displayType": "Number"
+    },
+    "roundsLost": {
+     "displayName": "Rounds Lost",
+     "metadata": {},
+     "value": 40,
+     "displayValue": "40",
+     "displayType": "Number"
+    },
+    "roundWinPct": {
+     "displayName": "Round Win %",
+     "metadata": {},
+     "value": 55.56,
+     "displayValue": "55.56",
+     "displayType": "NumberPercentage"
+    },
+    "kills": {
+     "displayName": "Kills",
+     "metadata": {},
+     "value": 70,
+     "displayValue": "70",
+     "displayType": "Number"
+    },
+    "deaths": {
+     "displayName": "Deaths",
+     "metadata": {},
+     "value": 60,
+     "displayValue": "60",
+     "displayType": "Number"
+    },
+    "assists": {
+     "displayName": "Assists",
+     "metadata": {},
+     "value": 17,
+     "displayValue": "17",
+     "displayType": "Number"
+    },
+    "kdRatio": {
+     "displayName": "K/D",
+     "metadata": {},
+     "value": 1.17,
+     "displayValue": "1.17",
+     "displayType": "NumberPrecision2"
+    },
+    "headshotPct": {
+     "displayName": "HS %",
+     "metadata": {},
+     "value": 42.86,
+     "displayValue": "42.86",
+     "displayType": "NumberPercentage"
+    },
+    "killsPerRound": {
+     "displayName": "Kills/Round",
+     "metadata": {},
+     "value": 0.78,
+     "displayValue": "0.78",
+     "displayType": "NumberPrecision2"
+    },
+    "killsPerGame": {
+     "displayName": "Kills/Game",
+     "metadata": {},
+     "value": 2.8,
+     "displayValue": "2.80",
+     "displayType": "NumberPrecision2"
+    },
+    "aces": {
+     "displayName": "Aces",
+     "metadata": {},
+     "value": 0,
+     "displayValue": "0",
+     "displayType": "Number"
+    },
+    "clutches": {
+     "displayName": "Clutches",
+     "metadata": {},
+     "value": 0,
+     "displayValue": "0",
+     "displayType": "Number"
+    },
+    "clutchesLost": {
+     "displayName": "Clutches Lost",
+     "metadata": {},
+     "value": 2,
+     "displayValue": "2",
+     "displayType": "Number"
+    },
+    "firstBloods": {
+     "displayName": "First Bloods",
+     "metadata": {},
+     "value": 14,
+     "displayValue": "14",
+     "displayType": "Number"
+    },
+    "firstDeaths": {
+     "displayName": "First Deaths",
+     "metadata": {},
+     "value": 10,
+     "displayValue": "10",
+     "displayType": "Number"
+    },
+    "teamKills": {
+     "displayName": "Team Kills",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "kills2K": {
+     "displayName": "2K",
+     "metadata": {},
+     "value": 9,
+     "displayValue": "9",
+     "displayType": "Number"
+    },
+    "kills3K": {
+     "displayName": "3K",
+     "metadata": {},
+     "value": 3,
+     "displayValue": "3",
+     "displayType": "Number"
+    },
+    "kills4K": {
+     "displayName": "4K",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "kills5K": {
+     "displayName": "5K",
+     "metadata": {},
+     "value": 0,
+     "displayValue": "0",
+     "displayType": "Number"
+    },
+    "esr": {
+     "displayName": "ESR",
+     "metadata": {},
+     "value": 0.55,
+     "displayValue": "0.55",
+     "displayType": "NumberPrecision2"
+    }
+   }
+  },
+  {
+   "type": "operator",
+   "attributes": {
+    "operator": "nokk",
+    "side": "attacker",
+    "gamemode": "all",
+    "season": 43,
+    "sessionType": "all"
+   },
+   "metadata": {
+    "operatorName": "Nøkk",
+    "operatorImageUrl": "https://trackercdn.com/cdn/r6.tracker.network/operators/badges/nokk.png"
+   },
+   "expiryDate": "2026-10-27T10:00:00+00:00",
+   "stats": {
+    "matchesPlayed": {
+     "displayName": "Matches",
+     "metadata": {},
+     "value": 3,
+     "displayValue": "3",
+     "displayType": "Number"
+    },
+    "matchesWon": {
+     "displayName": "Wins",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "matchesLost": {
+     "displayName": "Losses",
+     "metadata": {},
+     "value": 2,
+     "displayValue": "2",
+     "displayType": "Number"
+    },
+    "winPercentage": {
+     "displayName": "Win %",
+     "metadata": {},
+     "value": 33.33,
+     "displayValue": "33.33",
+     "displayType": "NumberPercentage"
+    },
+    "timePlayed": {
+     "displayName": "Time Played",
+     "metadata": {},
+     "value": 1000000,
+     "displayValue": "1,000,000",
+     "displayType": "TimeMilliseconds"
+    },
+    "roundsPlayed": {
+     "displayName": "Rounds",
+     "metadata": {},
+     "value": 10,
+     "displayValue": "10",
+     "displayType": "Number"
+    },
+    "roundsWon": {
+     "displayName": "Rounds Won",
+     "metadata": {},
+     "value": 4,
+     "displayValue": "4",
+     "displayType": "Number"
+    },
+    "roundsLost": {
+     "displayName": "Rounds Lost",
+     "metadata": {},
+     "value": 6,
+     "displayValue": "6",
+     "displayType": "Number"
+    },
+    "roundWinPct": {
+     "displayName": "Round Win %",
+     "metadata": {},
+     "value": 40.0,
+     "displayValue": "40.00",
+     "displayType": "NumberPercentage"
+    },
+    "kills": {
+     "displayName": "Kills",
+     "metadata": {},
+     "value": 6,
+     "displayValue": "6",
+     "displayType": "Number"
+    },
+    "deaths": {
+     "displayName": "Deaths",
+     "metadata": {},
+     "value": 9,
+     "displayValue": "9",
+     "displayType": "Number"
+    },
+    "assists": {
+     "displayName": "Assists",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "kdRatio": {
+     "displayName": "K/D",
+     "metadata": {},
+     "value": 0.67,
+     "displayValue": "0.67",
+     "displayType": "NumberPrecision2"
+    },
+    "headshotPct": {
+     "displayName": "HS %",
+     "metadata": {},
+     "value": 33.33,
+     "displayValue": "33.33",
+     "displayType": "NumberPercentage"
+    },
+    "killsPerRound": {
+     "displayName": "Kills/Round",
+     "metadata": {},
+     "value": 0.6,
+     "displayValue": "0.60",
+     "displayType": "NumberPrecision2"
+    },
+    "killsPerGame": {
+     "displayName": "Kills/Game",
+     "metadata": {},
+     "value": 2.0,
+     "displayValue": "2.00",
+     "displayType": "NumberPrecision2"
+    },
+    "aces": {
+     "displayName": "Aces",
+     "metadata": {},
+     "value": 0,
+     "displayValue": "0",
+     "displayType": "Number"
+    },
+    "clutches": {
+     "displayName": "Clutches",
+     "metadata": {},
+     "value": 0,
+     "displayValue": "0",
+     "displayType": "Number"
+    },
+    "clutchesLost": {
+     "displayName": "Clutches Lost",
+     "metadata": {},
+     "value": 2,
+     "displayValue": "2",
+     "displayType": "Number"
+    },
+    "firstBloods": {
+     "displayName": "First Bloods",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "firstDeaths": {
+     "displayName": "First Deaths",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "teamKills": {
+     "displayName": "Team Kills",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "kills2K": {
+     "displayName": "2K",
+     "metadata": {},
+     "value": 9,
+     "displayValue": "9",
+     "displayType": "Number"
+    },
+    "kills3K": {
+     "displayName": "3K",
+     "metadata": {},
+     "value": 3,
+     "displayValue": "3",
+     "displayType": "Number"
+    },
+    "kills4K": {
+     "displayName": "4K",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "kills5K": {
+     "displayName": "5K",
+     "metadata": {},
+     "value": 0,
+     "displayValue": "0",
+     "displayType": "Number"
+    },
+    "esr": {
+     "displayName": "ESR",
+     "metadata": {},
+     "value": 0.55,
+     "displayValue": "0.55",
+     "displayType": "NumberPrecision2"
+    }
+   }
+  },
+  {
+   "type": "operator",
+   "attributes": {
+    "operator": "brandnew",
+    "side": "defender",
+    "gamemode": "all",
+    "season": 43,
+    "sessionType": "all"
+   },
+   "metadata": {
+    "operatorName": "Brandnew",
+    "operatorImageUrl": "https://trackercdn.com/cdn/r6.tracker.network/operators/badges/brandnew.png"
+   },
+   "expiryDate": "2026-10-27T10:00:00+00:00",
+   "stats": {
+    "matchesPlayed": {
+     "displayName": "Matches",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "matchesWon": {
+     "displayName": "Wins",
+     "metadata": {},
+     "value": 0,
+     "displayValue": "0",
+     "displayType": "Number"
+    },
+    "matchesLost": {
+     "displayName": "Losses",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "winPercentage": {
+     "displayName": "Win %",
+     "metadata": {},
+     "value": 0.0,
+     "displayValue": "0.00",
+     "displayType": "NumberPercentage"
+    },
+    "timePlayed": {
+     "displayName": "Time Played",
+     "metadata": {},
+     "value": 300000,
+     "displayValue": "300,000",
+     "displayType": "TimeMilliseconds"
+    },
+    "roundsPlayed": {
+     "displayName": "Rounds",
+     "metadata": {},
+     "value": 3,
+     "displayValue": "3",
+     "displayType": "Number"
+    },
+    "roundsWon": {
+     "displayName": "Rounds Won",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "roundsLost": {
+     "displayName": "Rounds Lost",
+     "metadata": {},
+     "value": 2,
+     "displayValue": "2",
+     "displayType": "Number"
+    },
+    "roundWinPct": {
+     "displayName": "Round Win %",
+     "metadata": {},
+     "value": 33.33,
+     "displayValue": "33.33",
+     "displayType": "NumberPercentage"
+    },
+    "kills": {
+     "displayName": "Kills",
+     "metadata": {},
+     "value": 2,
+     "displayValue": "2",
+     "displayType": "Number"
+    },
+    "deaths": {
+     "displayName": "Deaths",
+     "metadata": {},
+     "value": 3,
+     "displayValue": "3",
+     "displayType": "Number"
+    },
+    "assists": {
+     "displayName": "Assists",
+     "metadata": {},
+     "value": 0,
+     "displayValue": "0",
+     "displayType": "Number"
+    },
+    "kdRatio": {
+     "displayName": "K/D",
+     "metadata": {},
+     "value": 0.67,
+     "displayValue": "0.67",
+     "displayType": "NumberPrecision2"
+    },
+    "headshotPct": {
+     "displayName": "HS %",
+     "metadata": {},
+     "value": 0.0,
+     "displayValue": "0.00",
+     "displayType": "NumberPercentage"
+    },
+    "killsPerRound": {
+     "displayName": "Kills/Round",
+     "metadata": {},
+     "value": 0.67,
+     "displayValue": "0.67",
+     "displayType": "NumberPrecision2"
+    },
+    "killsPerGame": {
+     "displayName": "Kills/Game",
+     "metadata": {},
+     "value": 2.0,
+     "displayValue": "2.00",
+     "displayType": "NumberPrecision2"
+    },
+    "aces": {
+     "displayName": "Aces",
+     "metadata": {},
+     "value": 0,
+     "displayValue": "0",
+     "displayType": "Number"
+    },
+    "clutches": {
+     "displayName": "Clutches",
+     "metadata": {},
+     "value": 0,
+     "displayValue": "0",
+     "displayType": "Number"
+    },
+    "clutchesLost": {
+     "displayName": "Clutches Lost",
+     "metadata": {},
+     "value": 2,
+     "displayValue": "2",
+     "displayType": "Number"
+    },
+    "firstBloods": {
+     "displayName": "First Bloods",
+     "metadata": {},
+     "value": 0,
+     "displayValue": "0",
+     "displayType": "Number"
+    },
+    "firstDeaths": {
+     "displayName": "First Deaths",
+     "metadata": {},
+     "value": 0,
+     "displayValue": "0",
+     "displayType": "Number"
+    },
+    "teamKills": {
+     "displayName": "Team Kills",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "kills2K": {
+     "displayName": "2K",
+     "metadata": {},
+     "value": 9,
+     "displayValue": "9",
+     "displayType": "Number"
+    },
+    "kills3K": {
+     "displayName": "3K",
+     "metadata": {},
+     "value": 3,
+     "displayValue": "3",
+     "displayType": "Number"
+    },
+    "kills4K": {
+     "displayName": "4K",
+     "metadata": {},
+     "value": 1,
+     "displayValue": "1",
+     "displayType": "Number"
+    },
+    "kills5K": {
+     "displayName": "5K",
+     "metadata": {},
+     "value": 0,
+     "displayValue": "0",
+     "displayType": "Number"
+    },
+    "esr": {
+     "displayName": "ESR",
+     "metadata": {},
+     "value": 0.55,
+     "displayValue": "0.55",
+     "displayType": "NumberPrecision2"
+    }
+   }
+  }
+ ]
+}

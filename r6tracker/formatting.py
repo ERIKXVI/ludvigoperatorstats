@@ -44,12 +44,13 @@ def clip(text: str, limit: int) -> str:
 
 
 def wl(wins: int, losses: int, abandons: int = 0) -> str:
-    s = f"{wins}W {losses}L"
-    return s + (f" {abandons}A" if abandons else "")
+    s = f"{wins:,}W {losses:,}L"
+    return s + (f" {abandons:,}A" if abandons else "")
 
 
 def board_line(b: BoardStats) -> str:
-    return f"{b.matches} matches · {wl(b.wins, b.losses, b.abandons)} ({b.win_rate:.0f}%) · K/D {b.kd:.2f} ({b.kills}/{b.deaths})"
+    return (f"{plural(b.matches, 'match', 'matches')} · {wl(b.wins, b.losses, b.abandons)} ({b.win_rate:.0f}%) · "
+            f"K/D {b.kd:.2f} ({b.kills:,}/{b.deaths:,})")
 
 
 def rank_line(b: BoardStats) -> str:

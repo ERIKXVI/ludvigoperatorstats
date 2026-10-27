@@ -1,128 +1,141 @@
-"""A tiny stand-in for the Ubisoft and Arenyze APIs, shaped like their real responses."""
+"""A tiny stand-in for the Tracker Network (R6 Tracker) and Arenyze APIs, shaped like their real responses."""
 
 from __future__ import annotations
 
-import base64
 import copy
+from datetime import datetime, timedelta, timezone
 
 from aiohttp import web
 
 from conftest import load
-from r6tracker.sources.ubisoft import APP_IDS, SPACE_ID
 
-EMAIL, PASSWORD, API_KEY = "bot@example.com", "hunter2", "test-key"
+API_KEY = "test-trn-key"
+ARENYZE_KEY = "test-arenyze-key"
 USER_ID = "11111111-2222-3333-4444-555555555555"
+TRN_PREFIX = "/v2/r6siege/standard"
+
+
+def _stat(stats: dict, key: str, delta: float) -> None:
+    node = stats.setdefault(key, {"displayName": key, "metadata": {}, "value": 0, "displayType": "Number"})
+    node["value"] = (node.get("value") or 0) + delta
 
 
 class FakeApis:
     def __init__(self):
-        self.full_profiles = load("ubisoft_full_profiles.json")
-        self.operators = load("arenyze_operators.json")
-        self.logins: list[str] = []
-        self.expire_next_request = False
-        self.two_factor = False
-        self.tickets = {"base": "T-base-1", "advanced": "T-adv-1"}
+        self.profile = load("trn_profile.json")
+        self.matches = load("trn_matches.json")
+        self.operators = load("trn_operators.json")
+        self.name = "Ludvig"  # current name; lookups by any other name 404 (like after a rename)
+        self.requests: list[str] = []
+        # failure switches
+        self.invalid_key = False
+        self.r6_forbidden = False
+        self.cloudflare_block = False
+        self.no_match_history = False
+        self.matches_down = False
+        self.next_id = 100
 
-    # helpers the tests use to "play a match"
-    def play_ranked_win(self, kills: int, deaths: int, rp: int):
-        fp = self.full_profiles["platform_families_full_profiles"][0]["board_ids_full_profiles"][0]["full_profiles"][0]
-        fp["season_statistics"]["kills"] += kills
-        fp["season_statistics"]["deaths"] += deaths
-        fp["season_statistics"]["match_outcomes"]["wins"] += 1
-        fp["profile"]["rank_points"] += rp
+    # ---- helpers the tests use to "play"
+    def play_match(self, *, won: bool, kills: int, deaths: int, rp: int, map_name: str = "Clubhouse",
+                   operators: tuple[str, ...] = ("Ash", "Jäger"), minutes_ago: int = 1) -> str:
+        """Add a new ranked match on top of the match history and bump the season stats like the game would."""
+        tmpl = copy.deepcopy(self.matches["data"]["matches"][0])
+        self.next_id += 1
+        match_id = f"00000000-0000-0000-0000-{self.next_id:012d}"
+        start = datetime.now(timezone.utc) - timedelta(minutes=minutes_ago + 25)
+        tmpl["attributes"]["id"] = match_id
+        tmpl["metadata"]["timestamp"] = start.isoformat(timespec="milliseconds")
+        tmpl["metadata"]["duration"] = 24 * 60 * 1000
+        tmpl["metadata"]["sessionMapName"] = map_name
+        seg = tmpl["segments"][0]
+        st = seg["stats"]
+        prev_rp = self._ranked_season()["stats"]["rankPoints"]["value"]
+        for key, value in (("kills", kills), ("deaths", deaths), ("wins", int(won)), ("losses", int(not won)),
+                           ("abandons", 0), ("roundsWon", 4 if won else 2), ("roundsLost", 2 if won else 4),
+                           ("rankPointsPrevious", prev_rp), ("rankPoints", prev_rp + rp), ("rankPointsDelta", rp)):
+            st[key]["value"] = value
+        seg["metadata"]["result"] = "win" if won else "loss"
+        seg["metadata"]["hasWon"] = won
+        seg["metadata"]["operators"] = [{"name": o, "imageUrl": ""} for o in operators]
+        self.matches["data"]["matches"].insert(0, tmpl)
+        season = self._ranked_season()["stats"]
+        for key, value in (("kills", kills), ("deaths", deaths), ("matchesPlayed", 1),
+                           ("matchesWon" if won else "matchesLost", 1), ("rankPoints", rp)):
+            _stat(season, key, value)
+        return match_id
 
-    def play_operator_rounds(self, name: str, rounds: int, won: int, kills: int, deaths: int):
-        for op in self.operators["operators"]["operators"]:
-            if op["operator"] == name:
-                op["roundsPlayed"] += rounds
-                op["wins"] += won
-                op["losses"] += rounds - won
-                op["kills"] += kills
-                op["deaths"] += deaths
+    def _ranked_season(self) -> dict:
+        d = self.profile["data"]
+        return next(s for s in d["segments"] if s["type"] == "season"
+                    and s["attributes"]["season"] == d["metadata"]["currentSeason"]
+                    and s["attributes"]["gamemode"] == "pvp_ranked")
 
+    def rename(self, new_name: str) -> None:
+        self.name = new_name
+        self.profile["data"]["platformInfo"]["platformUserHandle"] = new_name
+        self.profile["data"]["platformInfo"]["platformUserIdentifier"] = new_name
+
+    # ---- server
     def app(self) -> web.Application:
         app = web.Application()
-        app.router.add_post("/v3/profiles/sessions", self.sessions)
-        app.router.add_get("/v3/profiles", self.profiles)
-        app.router.add_get("/v3/users/{uid}/profiles", self.profiles)
-        app.router.add_get(f"/v2/spaces/{SPACE_ID}/title/r6s/skill/full_profiles", self.get_full_profiles)
-        app.router.add_get("/v1/profiles/stats", self.profile_stats)
+        app.router.add_get(TRN_PREFIX + "/profile/{slug}/{who}", self.trn_profile)
+        app.router.add_get(TRN_PREFIX + "/profile/{slug}/{who}/segments/operator", self.trn_operators)
+        app.router.add_get(TRN_PREFIX + "/matches/{slug}/{who}", self.trn_matches)
         app.router.add_get("/r6/api/v2/operators", self.arenyze_operators)
         app.router.add_get("/r6/api/v2/profile", self.arenyze_profile)
         return app
 
-    async def sessions(self, request: web.Request):
-        appid = request.headers.get("Ubi-AppId")
-        auth = request.headers.get("Authorization", "")
-        if appid == APP_IDS["base"]:
-            expected = "Basic " + base64.b64encode(f"{EMAIL}:{PASSWORD}".encode()).decode()
-            if auth != expected:
-                return web.json_response({"message": "Invalid credentials", "httpCode": 401}, status=401)
-            if self.two_factor:
-                return web.json_response({"twoFactorAuthenticationTicket": "2fa", "maskedPhone": "x"})
-            kind = "base"
-        elif appid == APP_IDS["advanced"]:
-            if auth != f"Ubi_v1 t={self.tickets['base']}":
-                return web.json_response({"message": "Invalid ticket", "httpCode": 401}, status=401)
-            kind = "advanced"
-        else:
-            return web.json_response({"message": "bad app"}, status=400)
-        self.logins.append(kind)
-        return web.json_response({
-            "ticket": self.tickets[kind],
-            "sessionId": f"S-{kind}",
-            "expiration": "2099-01-01T00:00:00.0000000Z",
-            "profileId": "bot-profile",
-            "userId": "bot-user",
-        })
-
-    def _check(self, request: web.Request, kind: str):
-        if self.expire_next_request:
-            self.expire_next_request = False
-            # Ubisoft rotated the tickets: old ones are dead, a new login gets new ones.
-            self.tickets = {k: v[:-1] + str(int(v[-1]) + 1) for k, v in self.tickets.items()}
-            return web.Response(status=401, text='{"message":"Invalid session","httpCode":401}')
-        h = request.headers
-        if h.get("Authorization") != f"Ubi_v1 t={self.tickets[kind]}" or h.get("Ubi-AppId") != APP_IDS[kind]:
-            return web.Response(status=401, text='{"message":"Invalid session","httpCode":401}')
-        if h.get("Ubi-SessionId") != f"S-{kind}":
-            return web.json_response({"message": "missing session id"}, status=400)
+    def _gate(self, request: web.Request):
+        self.requests.append(f"{request.path}?{request.query_string}")
+        if self.cloudflare_block:
+            return web.Response(status=403, text="<html><body>Just a moment...</body></html>", content_type="text/html")
+        key = request.headers.get("TRN-Api-Key")
+        if not key:
+            return web.json_response({"message": "No API key found in request"}, status=401)
+        if key != API_KEY or self.invalid_key:
+            return web.json_response({"message": "Invalid authentication credentials"}, status=401)
+        if self.r6_forbidden:
+            return web.json_response({"message": "You cannot consume this service"}, status=403)
+        who = request.match_info["who"]
+        if request.match_info["slug"] not in ("ubi", "psn", "xbl"):
+            return web.json_response({"errors": [{"code": "CollectorResultStatus::InvalidPlatform"}]}, status=400)
+        if who.lower() != self.name.lower() and who != USER_ID:
+            return web.json_response({"errors": [{"code": "CollectorResultStatus::NotFound",
+                                                  "message": "This profile could not be found."}]}, status=404)
         return None
 
-    async def profiles(self, request: web.Request):
-        if (err := self._check(request, "base")) is not None:
-            return err
-        name = request.query.get("nameOnPlatform", "Ludvig")
-        if name.lower() == "nobody":
-            return web.json_response({"profiles": []})
-        return web.json_response({"profiles": [
-            {"profileId": "p-other", "userId": "u-other", "platformType": "psn", "nameOnPlatform": name},
-            {"profileId": USER_ID, "userId": USER_ID, "platformType": request.query["platformType"],
-             "idOnPlatform": USER_ID, "nameOnPlatform": "Ludvig"},
-        ]})
+    async def trn_profile(self, request: web.Request):
+        return self._gate(request) or web.json_response(copy.deepcopy(self.profile))
 
-    async def get_full_profiles(self, request: web.Request):
-        if (err := self._check(request, "advanced")) is not None:
+    async def trn_operators(self, request: web.Request):
+        if (err := self._gate(request)) is not None:
             return err
-        assert request.query["profile_ids"] == USER_ID
-        assert request.query["platform_families"] == "pc"
-        return web.json_response(copy.deepcopy(self.full_profiles))
+        assert request.query["sessionType"] in ("all", "ranked", "quick-match", "standard", "dual-front", "r6cup")
+        assert request.query["season"] == "all" or request.query["season"].isdigit()
+        return web.json_response(copy.deepcopy(self.operators))
 
-    async def profile_stats(self, request: web.Request):
-        if (err := self._check(request, "base")) is not None:
+    async def trn_matches(self, request: web.Request):
+        if (err := self._gate(request)) is not None:
             return err
-        assert "PClearanceLevel" in request.query["statNames"]
-        return web.json_response(load("ubisoft_profile_stats.json"))
+        if self.no_match_history:
+            return web.json_response({"message": "Not Found"}, status=404)
+        if self.matches_down:
+            return web.json_response({"errors": [{"code": "Internal", "message": "boom"}]}, status=500)
+        page = int(request.query.get("next", 0))
+        all_matches = self.matches["data"]["matches"]
+        body = copy.deepcopy(self.matches)
+        body["data"]["matches"] = all_matches[page * 20:(page + 1) * 20]
+        body["data"]["metadata"] = {"next": page + 1} if (page + 1) * 20 < len(all_matches) else {}
+        return web.json_response(body)
 
     async def arenyze_operators(self, request: web.Request):
-        if request.headers.get("api-key") != API_KEY:
+        if request.headers.get("api-key") != ARENYZE_KEY:
             return web.json_response({"error": "Invalid API key"}, status=401)
         if request.query.get("nameOnPlatform") != "Ludvig":
             return web.json_response({"error": "Player not found"}, status=404)
-        assert request.query["seasonYear"] in ("Y11S3", "all")
-        return web.json_response(copy.deepcopy(self.operators))
+        return web.json_response(load("arenyze_operators.json"))
 
     async def arenyze_profile(self, request: web.Request):
-        if request.headers.get("api-key") != API_KEY:
+        if request.headers.get("api-key") != ARENYZE_KEY:
             return web.json_response({"error": "Invalid API key"}, status=401)
         return web.json_response(load("arenyze_profile.json"))

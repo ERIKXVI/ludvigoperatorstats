@@ -2,17 +2,22 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import asdict, dataclass, field, fields
 from datetime import datetime, timezone
 from typing import Any
 
-# Playlists ("boards") as Ubisoft names them, in the order we like to show them.
+# Playlists ("boards"), in the order we like to show them. Sources usually send their own display
+# name too (BoardStats.name), which wins over these.
 BOARD_LABELS: dict[str, str] = {
     "ranked": "Ranked",
-    "standard": "Quick Match",
+    "quick_match": "Quick Match",
+    "standard": "Standard",
     "unranked": "Unranked",
     "casual": "Casual",
     "dual_front": "Dual Front",
+    "siege_cup": "Siege Cup",
+    "arcade": "Arcade",
     "event": "Event",
     "warmup": "Warm-up",
 }
@@ -40,6 +45,12 @@ def season_code(season_id: int | None) -> str | None:
     if not season_id or season_id < 1:
         return None
     return f"Y{(season_id - 1) // 4 + 1}S{(season_id - 1) % 4 + 1}"
+
+
+def season_id_from_code(code: str) -> int | None:
+    """'Y11S3' -> 43 (None if it isn't a season code)."""
+    m = re.fullmatch(r"Y(\d+)S([1-4])", code.strip().upper())
+    return (int(m[1]) - 1) * 4 + int(m[2]) if m else None
 
 
 @dataclass
@@ -72,6 +83,7 @@ class BoardStats:
     max_rank: int = 0
     max_rank_points: int = 0
     top_rank_position: int = 0
+    name: str | None = None  # display name from the source, e.g. "Quick Match"
 
     @property
     def matches(self) -> int:
@@ -87,7 +99,7 @@ class BoardStats:
 
     @property
     def label(self) -> str:
-        return board_label(self.board)
+        return self.name or board_label(self.board)
 
 
 @dataclass
@@ -154,7 +166,13 @@ class Snapshot:
     pve_seconds: int | None = None
     battle_pass_level: int | None = None
     commendations: dict[str, int] = field(default_factory=dict)
-    boards: dict[str, BoardStats] = field(default_factory=dict)
+    boards: dict[str, BoardStats] = field(default_factory=dict)  # this season, per playlist
+    lifetime: BoardStats | None = None  # all seasons, all playlists
+    # Extra lifetime numbers when the source has them: headshots, headshot_pct, assists, team_kills,
+    # wallbangs, damage_dealt, kills_per_match, time_alive_seconds...
+    extras: dict[str, float] = field(default_factory=dict)
+    playstyles: dict[str, int] = field(default_factory=dict)  # e.g. {"attacker_entry_fragger": 4598}
+    name_changes: list[str] = field(default_factory=list)  # earlier names, newest first
     operators: list[OperatorStats] = field(default_factory=list)
     operator_season: str | None = None  # e.g. "Y11S3"
     operator_mode: str | None = None  # e.g. "all"
@@ -199,6 +217,8 @@ class Snapshot:
         if d.get("operators_fetched_at"):
             d["operators_fetched_at"] = datetime.fromisoformat(d["operators_fetched_at"])
         d["boards"] = {k: _build(BoardStats, v) for k, v in d.get("boards", {}).items()}
+        if d.get("lifetime"):
+            d["lifetime"] = _build(BoardStats, d["lifetime"])
         d["operators"] = [_build(OperatorStats, o) for o in d.get("operators", [])]
         return _build(cls, d)
 
@@ -230,7 +250,8 @@ class OperatorDelta:
 
 @dataclass
 class MatchBatch:
-    """New matches found on one playlist between two polls (usually exactly one match)."""
+    """New matches on one playlist. With a match-history source it's exactly one real match
+    (match_id, map, operators... are filled in); otherwise it's what changed between two polls."""
 
     board: str
     season_id: int
@@ -244,9 +265,20 @@ class MatchBatch:
     rank_after: int = 0
     rp_before: int = 0
     rp_after: int = 0
-    detected_at: datetime = field(default_factory=utcnow)
-    window_start: datetime | None = None
+    detected_at: datetime = field(default_factory=utcnow)  # when the match ended (or when we noticed)
+    window_start: datetime | None = None  # when it started (or the previous check)
     id: int | None = None
+    # Only known for real matches from a match-history source:
+    match_id: str | None = None
+    map_name: str | None = None
+    board_name: str | None = None  # the source's playlist name
+    duration_seconds: int = 0
+    assists: int = 0
+    headshots: int = 0
+    rounds_won: int = 0
+    rounds_lost: int = 0
+    operators: list[str] = field(default_factory=list)
+    extra: dict[str, Any] = field(default_factory=dict)  # first_bloods, clutches, aces, kills_3k, surrender...
 
     @property
     def kd(self) -> float:
@@ -258,7 +290,7 @@ class MatchBatch:
 
     @property
     def label(self) -> str:
-        return board_label(self.board)
+        return self.board_name or board_label(self.board)
 
     @property
     def result_text(self) -> str:

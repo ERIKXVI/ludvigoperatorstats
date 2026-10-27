@@ -29,7 +29,7 @@ TIMEOUT = aiohttp.ClientTimeout(total=30)
 
 
 class ArenyzeClient:
-    name = "arenyze"
+    name = "Arenyze"
 
     def __init__(self, api_key: str, session: aiohttp.ClientSession, *, base_url: str = ARENYZE_BASE):
         self._key = api_key

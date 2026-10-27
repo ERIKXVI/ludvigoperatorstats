@@ -138,13 +138,10 @@ class R6Bot(commands.Bot):
         self._configured_players_added = True
 
     async def announce(self, result: PollResult) -> None:
-        if not result.has_news or result.first_poll:
+        if not result.has_news:
             return
-        if result.batches:
-            embed = embeds.match_embed(result, self.settings.tz, self.fetcher.has_operators)
-        else:
-            embed = embeds.operators_update_embed(result)
-        await self._send(result.player, embed=embed)
+        for embed in embeds.news_embeds(result, self.settings.tz, self.fetcher.has_operators):
+            await self._send(result.player, embed=embed)
 
     async def _send(self, tp: TrackedPlayer, **kwargs) -> None:
         channel = await self.notify_channel()

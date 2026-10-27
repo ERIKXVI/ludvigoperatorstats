@@ -1,5 +1,13 @@
 from .arenyze import ArenyzeClient
-from .errors import AuthError, PlayerNotFound, RateLimited, SourceError
-from .ubisoft import UbisoftClient
+from .errors import AuthError, EndpointUnavailable, PlayerNotFound, RateLimited, SourceError
+from .trn import TrackerNetworkClient
 
-__all__ = ["ArenyzeClient", "UbisoftClient", "SourceError", "AuthError", "PlayerNotFound", "RateLimited"]
+__all__ = [
+    "ArenyzeClient",
+    "TrackerNetworkClient",
+    "SourceError",
+    "AuthError",
+    "EndpointUnavailable",
+    "PlayerNotFound",
+    "RateLimited",
+]

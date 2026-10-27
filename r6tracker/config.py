@@ -62,8 +62,7 @@ class Settings:
     discord_token: str | None = None
     discord_guild_id: int | None = None
     notify_channel_id: int | None = None
-    ubisoft_email: str | None = None
-    ubisoft_password: str | None = None
+    trn_api_key: str | None = None
     arenyze_api_key: str | None = None
     track_players: list[tuple[str, str]] = field(default_factory=list)
     poll_interval_minutes: float = 5.0
@@ -80,8 +79,7 @@ class Settings:
             discord_token=os.getenv("DISCORD_TOKEN") or None,
             discord_guild_id=_int("DISCORD_GUILD_ID", None),
             notify_channel_id=_int("NOTIFY_CHANNEL_ID", None),
-            ubisoft_email=os.getenv("UBISOFT_EMAIL") or None,
-            ubisoft_password=os.getenv("UBISOFT_PASSWORD") or None,
+            trn_api_key=os.getenv("TRN_API_KEY") or None,
             arenyze_api_key=os.getenv("ARENYZE_API_KEY") or None,
             track_players=parse_players(os.getenv("TRACK_PLAYERS")),
             poll_interval_minutes=max(_float("POLL_INTERVAL_MINUTES", 5.0), 1.0),
@@ -105,16 +103,16 @@ class Settings:
         return self.data_dir / "r6tracker.sqlite3"
 
     @property
-    def has_ubisoft(self) -> bool:
-        return bool(self.ubisoft_email and self.ubisoft_password)
+    def has_trn(self) -> bool:
+        return bool(self.trn_api_key)
 
     @property
     def has_arenyze(self) -> bool:
         return bool(self.arenyze_api_key)
 
     def check_sources(self) -> None:
-        if not (self.has_ubisoft or self.has_arenyze):
+        if not (self.has_trn or self.has_arenyze):
             raise ConfigError(
-                "No stats source configured. Set UBISOFT_EMAIL + UBISOFT_PASSWORD and/or "
-                "ARENYZE_API_KEY in your .env file (see .env.example)."
+                "No stats source configured. Set TRN_API_KEY (R6 Tracker) in your .env file "
+                "(see .env.example)."
             )

@@ -1,0 +1,2108 @@
+{
+ "data": {
+  "platformInfo": {
+   "platformSlug": "ubi",
+   "platformUserId": "11111111-2222-3333-4444-555555555555",
+   "platformUserHandle": "Ludvig",
+   "platformUserIdentifier": "Ludvig",
+   "avatarUrl": "https://ubisoft-avatars.akamaized.net/11111111-2222-3333-4444-555555555555/default_256_256.png",
+   "additionalParameters": null
+  },
+  "userInfo": {
+   "userId": null,
+   "isPremium": false,
+   "isVerified": false,
+   "isInfluencer": false,
+   "isPartner": false,
+   "countryCode": null,
+   "customAvatarUrl": null,
+   "customHeroUrl": null,
+   "socialAccounts": [],
+   "pageviews": 1,
+   "isSuspicious": null
+  },
+  "metadata": {
+   "lastUpdated": null,
+   "banAlerts": null,
+   "nameChanges": [
+    {
+     "name": "OldLudvig",
+     "timestamp": "2023-01-14T02:54:00+00:00"
+    }
+   ],
+   "currentSeason": 43,
+   "clearanceLevel": 287,
+   "battlepassLevel": 37,
+   "uplayUserId": "11111111-2222-3333-4444-555555555555",
+   "isOverwolfAppUser": false,
+   "linkedProfiles": []
+  },
+  "segments": [
+   {
+    "type": "overview",
+    "attributes": {},
+    "metadata": {},
+    "expiryDate": "0001-01-01T00:00:00+00:00",
+    "stats": {
+     "matchesPlayed": {
+      "displayName": "Matches Played",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 5609,
+      "displayValue": "5,609",
+      "displayType": "Number"
+     },
+     "matchesWon": {
+      "displayName": "Wins",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 2826,
+      "displayValue": "2,826",
+      "displayType": "Number"
+     },
+     "matchesLost": {
+      "displayName": "Losses",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 2606,
+      "displayValue": "2,606",
+      "displayType": "Number"
+     },
+     "matchesAbandoned": {
+      "displayName": "Abandons",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 177,
+      "displayValue": "177",
+      "displayType": "Number"
+     },
+     "timePlayed": {
+      "displayName": "Time Played",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 7316390,
+      "displayValue": "2,032h",
+      "displayType": "TimeSeconds"
+     },
+     "pvpTimePlayed": {
+      "displayName": "PvP Playtime",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 6657913,
+      "displayValue": "1,849h",
+      "displayType": "TimeSeconds"
+     },
+     "kills": {
+      "displayName": "Kills",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 20461,
+      "displayValue": "20,461",
+      "displayType": "Number"
+     },
+     "deaths": {
+      "displayName": "Deaths",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 21605,
+      "displayValue": "21,605",
+      "displayType": "Number"
+     },
+     "attackerRoundsWon": {
+      "displayName": "Attacker Rounds Won",
+      "displayCategory": "Attacker",
+      "category": "attacker",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "attackerTeamKillsInObj": {
+      "displayName": "Attacker Team Kills In Obj",
+      "displayCategory": "Attacker",
+      "category": "attacker",
+      "metadata": {},
+      "value": 2,
+      "displayValue": "2",
+      "displayType": "Number"
+     },
+     "attackerEnemyKillsInObj": {
+      "displayName": "Attacker Enemy Kills In Obj",
+      "displayCategory": "Attacker",
+      "category": "attacker",
+      "metadata": {},
+      "value": 606,
+      "displayValue": "606",
+      "displayType": "Number"
+     },
+     "attackerTeamKillsOutObj": {
+      "displayName": "Attacker Team Kills Out Obj",
+      "displayCategory": "Attacker",
+      "category": "attacker",
+      "metadata": {},
+      "value": 55,
+      "displayValue": "55",
+      "displayType": "Number"
+     },
+     "attackerEnemyKillsOutObj": {
+      "displayName": "Attacker Enemy Kills Out Obj",
+      "displayCategory": "Attacker",
+      "category": "attacker",
+      "metadata": {},
+      "value": 5238,
+      "displayValue": "5,238",
+      "displayType": "Number"
+     },
+     "defenderRoundsWon": {
+      "displayName": "Defender Rounds Won",
+      "displayCategory": "Defender",
+      "category": "defender",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "defenderTeamKillsInObj": {
+      "displayName": "Defender Team Kills In Obj",
+      "displayCategory": "Defender",
+      "category": "defender",
+      "metadata": {},
+      "value": 6,
+      "displayValue": "6",
+      "displayType": "Number"
+     },
+     "defenderEnemyKillsInObj": {
+      "displayName": "Defender Enemy Kills In Obj",
+      "displayCategory": "Defender",
+      "category": "defender",
+      "metadata": {},
+      "value": 1325,
+      "displayValue": "1,325",
+      "displayType": "Number"
+     },
+     "defenderTeamKillsOutObj": {
+      "displayName": "Defender Team Kills Out Obj",
+      "displayCategory": "Defender",
+      "category": "defender",
+      "metadata": {},
+      "value": 64,
+      "displayValue": "64",
+      "displayType": "Number"
+     },
+     "defenderEnemyKillsOutObj": {
+      "displayName": "Defender Enemy Kills Out Obj",
+      "displayCategory": "Defender",
+      "category": "defender",
+      "metadata": {},
+      "value": 5342,
+      "displayValue": "5,342",
+      "displayType": "Number"
+     },
+     "headshots": {
+      "displayName": "Headshots",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 7637,
+      "displayValue": "7,637",
+      "displayType": "Number"
+     },
+     "headshotsMissed": {
+      "displayName": "Headshots Missed",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 8086,
+      "displayValue": "8,086",
+      "displayType": "Number"
+     },
+     "headshotPercentage": {
+      "displayName": "HS%",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 48.57,
+      "displayValue": "48.6%",
+      "displayType": "NumberPercentage"
+     },
+     "wallbangs": {
+      "displayName": "Wallbangs",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 1168,
+      "displayValue": "1,168",
+      "displayType": "Number"
+     },
+     "damageDealt": {
+      "displayName": "Damage Dealt",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 1649043,
+      "displayValue": "1,649,043",
+      "displayType": "Number"
+     },
+     "assists": {
+      "displayName": "Assists",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 3092,
+      "displayValue": "3,092",
+      "displayType": "Number"
+     },
+     "teamKills": {
+      "displayName": "Team Kills",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 127,
+      "displayValue": "127",
+      "displayType": "Number"
+     },
+     "playstyleAttackerBreacher": {
+      "displayName": "Breach",
+      "displayCategory": "Playstyle Attacker",
+      "category": "playstyleAttacker",
+      "metadata": {
+       "role": "breach",
+       "type": "attacker",
+       "usage": {
+        "value": 17.42,
+        "displayValue": "17.4%",
+        "displayType": "NumberPercentage"
+       },
+       "color": "#2B8CEE"
+      },
+      "value": 5159,
+      "displayValue": "5,159",
+      "displayType": "Number"
+     },
+     "playstyleAttackerEntryFragger": {
+      "displayName": "Front Line",
+      "displayCategory": "Playstyle Attacker",
+      "category": "playstyleAttacker",
+      "metadata": {
+       "role": "front-line",
+       "type": "attacker",
+       "usage": {
+        "value": 15.53,
+        "displayValue": "15.5%",
+        "displayType": "NumberPercentage"
+       },
+       "color": "#FE6100"
+      },
+      "value": 4598,
+      "displayValue": "4,598",
+      "displayType": "Number"
+     },
+     "playstyleAttackerIntelProvider": {
+      "displayName": "Intel",
+      "displayCategory": "Playstyle Attacker",
+      "category": "playstyleAttacker",
+      "metadata": {
+       "role": "intel",
+       "type": "attacker",
+       "usage": {
+        "value": 14.48,
+        "displayValue": "14.5%",
+        "displayType": "NumberPercentage"
+       },
+       "color": "#FFD700"
+      },
+      "value": 4289,
+      "displayValue": "4,289",
+      "displayType": "Number"
+     },
+     "playstyleAttackerRoamClearer": {
+      "displayName": "Map Control",
+      "displayCategory": "Playstyle Attacker",
+      "category": "playstyleAttacker",
+      "metadata": {
+       "role": "map-control",
+       "type": "attacker",
+       "usage": {
+        "value": 17.42,
+        "displayValue": "17.4%",
+        "displayType": "NumberPercentage"
+       },
+       "color": "#C32225"
+      },
+      "value": 5159,
+      "displayValue": "5,159",
+      "displayType": "Number"
+     },
+     "playstyleAttackerSupporter": {
+      "displayName": "Support",
+      "displayCategory": "Playstyle Attacker",
+      "category": "playstyleAttacker",
+      "metadata": {
+       "role": "support",
+       "type": "attacker",
+       "usage": {
+        "value": 20.0,
+        "displayValue": "20.0%",
+        "displayType": "NumberPercentage"
+       },
+       "color": "#785EF0"
+      },
+      "value": 5924,
+      "displayValue": "5,924",
+      "displayType": "Number"
+     },
+     "playstyleAttackerUtilityClearer": {
+      "displayName": "Anti-Gadget",
+      "displayCategory": "Playstyle Attacker",
+      "category": "playstyleAttacker",
+      "metadata": {
+       "role": "anti-gadget",
+       "type": "attacker",
+       "usage": {
+        "value": 15.14,
+        "displayValue": "15.1%",
+        "displayType": "NumberPercentage"
+       },
+       "color": "#2B8CEE"
+      },
+      "value": 4485,
+      "displayValue": "4,485",
+      "displayType": "Number"
+     },
+     "playstyleDefenderDebuffer": {
+      "displayName": "Crowd Control",
+      "displayCategory": "Playstyle Defender",
+      "category": "playstyleDefender",
+      "metadata": {
+       "role": "crowd-control",
+       "type": "defender",
+       "usage": {
+        "value": 15.27,
+        "displayValue": "15.3%",
+        "displayType": "NumberPercentage"
+       },
+       "color": "#C32225"
+      },
+      "value": 4090,
+      "displayValue": "4,090",
+      "displayType": "Number"
+     },
+     "playstyleDefenderEntryDenier": {
+      "displayName": "Anti-Entry",
+      "displayCategory": "Playstyle Defender",
+      "category": "playstyleDefender",
+      "metadata": {
+       "role": "anti-entry",
+       "type": "defender",
+       "usage": {
+        "value": 16.78,
+        "displayValue": "16.8%",
+        "displayType": "NumberPercentage"
+       },
+       "color": "#FE6100"
+      },
+      "value": 4495,
+      "displayValue": "4,495",
+      "displayType": "Number"
+     },
+     "playstyleDefenderIntelProvider": {
+      "displayName": "Intel",
+      "displayCategory": "Playstyle Defender",
+      "category": "playstyleDefender",
+      "metadata": {
+       "role": "intel",
+       "type": "defender",
+       "usage": {
+        "value": 17.92,
+        "displayValue": "17.9%",
+        "displayType": "NumberPercentage"
+       },
+       "color": "#FFD700"
+      },
+      "value": 4801,
+      "displayValue": "4,801",
+      "displayType": "Number"
+     },
+     "playstyleDefenderSupporter": {
+      "displayName": "Support",
+      "displayCategory": "Playstyle Defender",
+      "category": "playstyleDefender",
+      "metadata": {
+       "role": "support",
+       "type": "defender",
+       "usage": {
+        "value": 16.31,
+        "displayValue": "16.3%",
+        "displayType": "NumberPercentage"
+       },
+       "color": "#785EF0"
+      },
+      "value": 4371,
+      "displayValue": "4,371",
+      "displayType": "Number"
+     },
+     "playstyleDefenderTrapper": {
+      "displayName": "Trapper",
+      "displayCategory": "Playstyle Defender",
+      "category": "playstyleDefender",
+      "metadata": {
+       "role": "trapper",
+       "type": "defender",
+       "usage": {
+        "value": 20.82,
+        "displayValue": "20.8%",
+        "displayType": "NumberPercentage"
+       },
+       "color": "#FFB000"
+      },
+      "value": 5577,
+      "displayValue": "5,577",
+      "displayType": "Number"
+     },
+     "playstyleDefenderUtilityDenier": {
+      "displayName": "Anti-Gadget",
+      "displayCategory": "Playstyle Defender",
+      "category": "playstyleDefender",
+      "metadata": {
+       "role": "anti-gadget",
+       "type": "defender",
+       "usage": {
+        "value": 12.91,
+        "displayValue": "12.9%",
+        "displayType": "NumberPercentage"
+       },
+       "color": "#2B8CEE"
+      },
+      "value": 3459,
+      "displayValue": "3,459",
+      "displayType": "Number"
+     },
+     "kdRatio": {
+      "displayName": "K/D Ratio",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 0.95,
+      "displayValue": "0.95",
+      "displayType": "NumberPrecision2"
+     },
+     "killsPerMatch": {
+      "displayName": "Kills/match",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 3.65,
+      "displayValue": "3.65",
+      "displayType": "NumberPrecision2"
+     },
+     "killsPerMin": {
+      "displayName": "Kills/min",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 0.17,
+      "displayValue": "0.17",
+      "displayType": "NumberPrecision2"
+     },
+     "winPercentage": {
+      "displayName": "Win %",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 50.38,
+      "displayValue": "50.4%",
+      "displayType": "NumberPercentage"
+     },
+     "timeAlive": {
+      "displayName": "Time Alive",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 338,
+      "displayValue": "05m 38s",
+      "displayType": "TimeSeconds"
+     }
+    }
+   },
+   {
+    "type": "gamemode",
+    "attributes": {
+     "gamemode": "pvp_ranked",
+     "sessionType": "ranked"
+    },
+    "metadata": {
+     "gamemodeName": "Ranked",
+     "sessionTypeName": "Ranked"
+    },
+    "expiryDate": "0001-01-01T00:00:00+00:00",
+    "stats": {
+     "matchesPlayed": {
+      "displayName": "Matches Played",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 2171,
+      "displayValue": "2,171",
+      "displayType": "Number"
+     },
+     "matchesWon": {
+      "displayName": "Wins",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 1071,
+      "displayValue": "1,071",
+      "displayType": "Number"
+     },
+     "matchesLost": {
+      "displayName": "Losses",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 1094,
+      "displayValue": "1,094",
+      "displayType": "Number"
+     },
+     "matchesAbandoned": {
+      "displayName": "Ties",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 6,
+      "displayValue": "6",
+      "displayType": "Number"
+     },
+     "timePlayed": {
+      "displayName": "Time Played",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0s",
+      "displayType": "TimeSeconds"
+     },
+     "kills": {
+      "displayName": "Kills",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 7860,
+      "displayValue": "7,860",
+      "displayType": "Number"
+     },
+     "deaths": {
+      "displayName": "Deaths",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 9332,
+      "displayValue": "9,332",
+      "displayType": "Number"
+     },
+     "kdRatio": {
+      "displayName": "K/D Ratio",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 0.84,
+      "displayValue": "0.84",
+      "displayType": "NumberPrecision2"
+     },
+     "killsPerMatch": {
+      "displayName": "Avg Kills",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 3.62,
+      "displayValue": "3.62",
+      "displayType": "NumberPrecision2"
+     },
+     "winPercentage": {
+      "displayName": "Win %",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 49.33,
+      "displayValue": "49.3%",
+      "displayType": "NumberPercentage"
+     }
+    }
+   },
+   {
+    "type": "gamemode",
+    "attributes": {
+     "gamemode": "pvp_warmup",
+     "sessionType": "arcade"
+    },
+    "metadata": {
+     "gamemodeName": "Arcade",
+     "sessionTypeName": "Arcade"
+    },
+    "expiryDate": "0001-01-01T00:00:00+00:00",
+    "stats": {
+     "matchesPlayed": {
+      "displayName": "Matches Played",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 269,
+      "displayValue": "269",
+      "displayType": "Number"
+     },
+     "matchesWon": {
+      "displayName": "Wins",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 142,
+      "displayValue": "142",
+      "displayType": "Number"
+     },
+     "matchesLost": {
+      "displayName": "Losses",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 88,
+      "displayValue": "88",
+      "displayType": "Number"
+     },
+     "matchesAbandoned": {
+      "displayName": "Ties",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 39,
+      "displayValue": "39",
+      "displayType": "Number"
+     },
+     "timePlayed": {
+      "displayName": "Time Played",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0s",
+      "displayType": "TimeSeconds"
+     },
+     "kills": {
+      "displayName": "Kills",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 4161,
+      "displayValue": "4,161",
+      "displayType": "Number"
+     },
+     "deaths": {
+      "displayName": "Deaths",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 3050,
+      "displayValue": "3,050",
+      "displayType": "Number"
+     },
+     "kdRatio": {
+      "displayName": "K/D Ratio",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 1.36,
+      "displayValue": "1.36",
+      "displayType": "NumberPrecision2"
+     },
+     "killsPerMatch": {
+      "displayName": "Avg Kills",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 15.47,
+      "displayValue": "15.47",
+      "displayType": "NumberPrecision2"
+     },
+     "winPercentage": {
+      "displayName": "Win %",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 52.79,
+      "displayValue": "52.8%",
+      "displayType": "NumberPercentage"
+     }
+    }
+   },
+   {
+    "type": "gamemode",
+    "attributes": {
+     "gamemode": "pvp_event",
+     "sessionType": "event"
+    },
+    "metadata": {
+     "gamemodeName": "Event",
+     "sessionTypeName": "Event"
+    },
+    "expiryDate": "0001-01-01T00:00:00+00:00",
+    "stats": {
+     "matchesPlayed": {
+      "displayName": "Matches Played",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 183,
+      "displayValue": "183",
+      "displayType": "Number"
+     },
+     "matchesWon": {
+      "displayName": "Wins",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 102,
+      "displayValue": "102",
+      "displayType": "Number"
+     },
+     "matchesLost": {
+      "displayName": "Losses",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 73,
+      "displayValue": "73",
+      "displayType": "Number"
+     },
+     "matchesAbandoned": {
+      "displayName": "Ties",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 8,
+      "displayValue": "8",
+      "displayType": "Number"
+     },
+     "timePlayed": {
+      "displayName": "Time Played",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0s",
+      "displayType": "TimeSeconds"
+     },
+     "kills": {
+      "displayName": "Kills",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 666,
+      "displayValue": "666",
+      "displayType": "Number"
+     },
+     "deaths": {
+      "displayName": "Deaths",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 794,
+      "displayValue": "794",
+      "displayType": "Number"
+     },
+     "kdRatio": {
+      "displayName": "K/D Ratio",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 0.84,
+      "displayValue": "0.84",
+      "displayType": "NumberPrecision2"
+     },
+     "killsPerMatch": {
+      "displayName": "Avg Kills",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 3.64,
+      "displayValue": "3.64",
+      "displayType": "NumberPrecision2"
+     },
+     "winPercentage": {
+      "displayName": "Win %",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 55.74,
+      "displayValue": "55.7%",
+      "displayType": "NumberPercentage"
+     }
+    }
+   },
+   {
+    "type": "gamemode",
+    "attributes": {
+     "gamemode": "pvp_quickplay",
+     "sessionType": "quickplay"
+    },
+    "metadata": {
+     "gamemodeName": "Standard + Quick Match",
+     "sessionTypeName": "Standard + Quick Play"
+    },
+    "expiryDate": "0001-01-01T00:00:00+00:00",
+    "stats": {
+     "matchesPlayed": {
+      "displayName": "Matches Played",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 2986,
+      "displayValue": "2,986",
+      "displayType": "Number"
+     },
+     "matchesWon": {
+      "displayName": "Wins",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 1511,
+      "displayValue": "1,511",
+      "displayType": "Number"
+     },
+     "matchesLost": {
+      "displayName": "Losses",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 1351,
+      "displayValue": "1,351",
+      "displayType": "Number"
+     },
+     "matchesAbandoned": {
+      "displayName": "Ties",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 124,
+      "displayValue": "124",
+      "displayType": "Number"
+     },
+     "timePlayed": {
+      "displayName": "Time Played",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0s",
+      "displayType": "TimeSeconds"
+     },
+     "kills": {
+      "displayName": "Kills",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 7774,
+      "displayValue": "7,774",
+      "displayType": "Number"
+     },
+     "deaths": {
+      "displayName": "Deaths",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 8429,
+      "displayValue": "8,429",
+      "displayType": "Number"
+     },
+     "kdRatio": {
+      "displayName": "K/D Ratio",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 0.92,
+      "displayValue": "0.92",
+      "displayType": "NumberPrecision2"
+     },
+     "killsPerMatch": {
+      "displayName": "Avg Kills",
+      "displayCategory": "Combat",
+      "category": "combat",
+      "metadata": {},
+      "value": 2.6,
+      "displayValue": "2.60",
+      "displayType": "NumberPrecision2"
+     },
+     "winPercentage": {
+      "displayName": "Win %",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 50.6,
+      "displayValue": "50.6%",
+      "displayType": "NumberPercentage"
+     }
+    }
+   },
+   {
+    "type": "season",
+    "attributes": {
+     "season": 43,
+     "gamemode": "pvp_r6cup",
+     "sessionType": "siege-cup"
+    },
+    "metadata": {
+     "name": "Fake Season",
+     "seasonName": "Fake Season",
+     "shortName": "Y11S3",
+     "color": "#e87930",
+     "gamemodeName": "Siege Cup",
+     "rankType": "rp",
+     "sessionTypeName": "Siege Cup"
+    },
+    "expiryDate": "0001-01-01T00:00:00+00:00",
+    "stats": {
+     "matchesPlayed": {
+      "displayName": "Matches",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 3,
+      "displayValue": "3",
+      "displayType": "Number"
+     },
+     "matchesWon": {
+      "displayName": "Wins",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 1,
+      "displayValue": "1",
+      "displayType": "Number"
+     },
+     "matchesLost": {
+      "displayName": "Losses",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 2,
+      "displayValue": "2",
+      "displayType": "Number"
+     },
+     "matchesAbandoned": {
+      "displayName": "Abandons",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": null,
+      "displayValue": null,
+      "displayType": "Number"
+     },
+     "winPercentage": {
+      "displayName": "Match Win %",
+      "metadata": {},
+      "value": 33.33333333333333,
+      "displayValue": "33.3%",
+      "displayType": "NumberPercentage"
+     },
+     "kills": {
+      "displayName": "Kills",
+      "metadata": {},
+      "value": 14,
+      "displayValue": "14",
+      "displayType": "Number"
+     },
+     "deaths": {
+      "displayName": "Deaths",
+      "metadata": {},
+      "value": 18,
+      "displayValue": "18",
+      "displayType": "Number"
+     },
+     "rank": {
+      "displayName": "Rank",
+      "metadata": {},
+      "value": null,
+      "displayValue": null,
+      "displayType": "Number"
+     },
+     "maxRank": {
+      "displayName": "Max Rank",
+      "metadata": {},
+      "value": null,
+      "displayValue": null,
+      "displayType": "Number"
+     },
+     "rankPoints": {
+      "displayName": "Rank Points",
+      "metadata": {
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/unknown.png"
+      },
+      "value": null,
+      "displayValue": null,
+      "displayType": "Number"
+     },
+     "maxRankPoints": {
+      "displayName": "Max Rank Points",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/unknown.png"
+      },
+      "value": null,
+      "displayValue": null,
+      "displayType": "Number"
+     },
+     "topRankPosition": {
+      "displayName": "Top Rank Position",
+      "metadata": {},
+      "value": null,
+      "displayValue": null,
+      "displayType": "Number"
+     },
+     "kdRatio": {
+      "displayName": "K/D",
+      "metadata": {},
+      "value": 0.7777777777777778,
+      "displayValue": "0.78",
+      "displayType": "NumberPrecision2"
+     },
+     "killsPerGame": {
+      "displayName": "Kills/Game",
+      "metadata": {},
+      "value": 4.666666666666667,
+      "displayValue": "4.67",
+      "displayType": "NumberPrecision2"
+     }
+    }
+   },
+   {
+    "type": "season",
+    "attributes": {
+     "season": 43,
+     "gamemode": "pvp_ranked",
+     "sessionType": "ranked"
+    },
+    "metadata": {
+     "name": "Fake Season",
+     "seasonName": "Fake Season",
+     "shortName": "Y11S3",
+     "color": "#e87930",
+     "gamemodeName": "Ranked",
+     "rankType": "rp",
+     "sessionTypeName": "Ranked"
+    },
+    "expiryDate": "0001-01-01T00:00:00+00:00",
+    "stats": {
+     "matchesPlayed": {
+      "percentile": 92.0,
+      "displayName": "Matches",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 177,
+      "displayValue": "177",
+      "displayType": "Number"
+     },
+     "matchesWon": {
+      "percentile": 88.0,
+      "displayName": "Wins",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 79,
+      "displayValue": "79",
+      "displayType": "Number"
+     },
+     "matchesLost": {
+      "percentile": 93.0,
+      "displayName": "Losses",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 97,
+      "displayValue": "97",
+      "displayType": "Number"
+     },
+     "matchesAbandoned": {
+      "percentile": 0.0,
+      "displayName": "Abandons",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 1,
+      "displayValue": "1",
+      "displayType": "Number"
+     },
+     "winPercentage": {
+      "percentile": 29.0,
+      "displayName": "Match Win %",
+      "metadata": {},
+      "value": 44.632768361581924,
+      "displayValue": "44.6%",
+      "displayType": "NumberPercentage"
+     },
+     "kills": {
+      "percentile": 87.0,
+      "displayName": "Kills",
+      "metadata": {},
+      "value": 603,
+      "displayValue": "603",
+      "displayType": "Number"
+     },
+     "deaths": {
+      "percentile": 92.0,
+      "displayName": "Deaths",
+      "metadata": {},
+      "value": 820,
+      "displayValue": "820",
+      "displayType": "Number"
+     },
+     "rank": {
+      "displayName": "Rank",
+      "metadata": {},
+      "value": 29,
+      "displayValue": "29",
+      "displayType": "Number"
+     },
+     "maxRank": {
+      "displayName": "Max Rank",
+      "metadata": {},
+      "value": 31,
+      "displayValue": "31",
+      "displayType": "Number"
+     },
+     "rankPoints": {
+      "rank": 97269,
+      "percentile": 97.0,
+      "displayName": "Rank Points",
+      "metadata": {
+       "name": "EMERALD II",
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/small/emerald-2.png",
+       "topRankPosition": 0
+      },
+      "value": 3839,
+      "displayValue": "3,839",
+      "displayType": "Number"
+     },
+     "maxRankPoints": {
+      "percentile": 97.6,
+      "displayName": "Max Rank Points",
+      "metadata": {
+       "name": "DIAMOND V",
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/small/diamond-5.png"
+      },
+      "value": 4027,
+      "displayValue": "4,027",
+      "displayType": "Number"
+     },
+     "topRankPosition": {
+      "displayName": "Top Rank Position",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "kdRatio": {
+      "percentile": 30.0,
+      "displayName": "K/D",
+      "metadata": {},
+      "value": 0.7353658536585366,
+      "displayValue": "0.74",
+      "displayType": "NumberPrecision2"
+     },
+     "killsPerGame": {
+      "percentile": 33.0,
+      "displayName": "Kills/Game",
+      "metadata": {},
+      "value": 3.406779661016949,
+      "displayValue": "3.41",
+      "displayType": "NumberPrecision2"
+     },
+     "elo": {
+      "percentile": 82.0,
+      "displayName": "TRN Elo",
+      "metadata": {},
+      "value": 1280,
+      "displayValue": "1,280",
+      "displayType": "Number"
+     }
+    }
+   },
+   {
+    "type": "season",
+    "attributes": {
+     "season": 43,
+     "gamemode": "pvp_casual",
+     "sessionType": "quick-match"
+    },
+    "metadata": {
+     "name": "Fake Season",
+     "seasonName": "Fake Season",
+     "shortName": "Y11S3",
+     "color": "#e87930",
+     "gamemodeName": "Quick Match",
+     "rankType": "rp",
+     "sessionTypeName": "Quick Match"
+    },
+    "expiryDate": "0001-01-01T00:00:00+00:00",
+    "stats": {
+     "matchesPlayed": {
+      "percentile": 77.0,
+      "displayName": "Matches",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 23,
+      "displayValue": "23",
+      "displayType": "Number"
+     },
+     "matchesWon": {
+      "percentile": 69.0,
+      "displayName": "Wins",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 9,
+      "displayValue": "9",
+      "displayType": "Number"
+     },
+     "matchesLost": {
+      "percentile": 70.0,
+      "displayName": "Losses",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 9,
+      "displayValue": "9",
+      "displayType": "Number"
+     },
+     "matchesAbandoned": {
+      "percentile": 67.0,
+      "displayName": "Abandons",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 5,
+      "displayValue": "5",
+      "displayType": "Number"
+     },
+     "winPercentage": {
+      "percentile": 35.0,
+      "displayName": "Match Win %",
+      "metadata": {},
+      "value": 39.130434782608695,
+      "displayValue": "39.1%",
+      "displayType": "NumberPercentage"
+     },
+     "kills": {
+      "percentile": 71.0,
+      "displayName": "Kills",
+      "metadata": {},
+      "value": 40,
+      "displayValue": "40",
+      "displayType": "Number"
+     },
+     "deaths": {
+      "percentile": 75.0,
+      "displayName": "Deaths",
+      "metadata": {},
+      "value": 51,
+      "displayValue": "51",
+      "displayType": "Number"
+     },
+     "rank": {
+      "displayName": "Rank",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "maxRank": {
+      "displayName": "Max Rank",
+      "metadata": {},
+      "value": null,
+      "displayValue": null,
+      "displayType": "Number"
+     },
+     "rankPoints": {
+      "percentile": 0.0,
+      "displayName": "Rank Points",
+      "metadata": {
+       "name": "NO RANK",
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/small/unranked.png",
+       "topRankPosition": 0
+      },
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "maxRankPoints": {
+      "displayName": "Max Rank Points",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/unknown.png"
+      },
+      "value": null,
+      "displayValue": null,
+      "displayType": "Number"
+     },
+     "topRankPosition": {
+      "displayName": "Top Rank Position",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "kdRatio": {
+      "percentile": 40.0,
+      "displayName": "K/D",
+      "metadata": {},
+      "value": 0.7843137254901961,
+      "displayValue": "0.78",
+      "displayType": "NumberPrecision2"
+     },
+     "killsPerGame": {
+      "percentile": 34.0,
+      "displayName": "Kills/Game",
+      "metadata": {},
+      "value": 1.7391304347826086,
+      "displayValue": "1.74",
+      "displayType": "NumberPrecision2"
+     }
+    }
+   },
+   {
+    "type": "season",
+    "attributes": {
+     "season": 43,
+     "gamemode": "pvp_warmup",
+     "sessionType": "arcade"
+    },
+    "metadata": {
+     "name": "Fake Season",
+     "seasonName": "Fake Season",
+     "shortName": "Y11S3",
+     "color": "#e87930",
+     "gamemodeName": "Arcade",
+     "rankType": "rp",
+     "sessionTypeName": "Arcade"
+    },
+    "expiryDate": "0001-01-01T00:00:00+00:00",
+    "stats": {
+     "matchesPlayed": {
+      "percentile": 90.0,
+      "displayName": "Matches",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 16,
+      "displayValue": "16",
+      "displayType": "Number"
+     },
+     "matchesWon": {
+      "percentile": 89.0,
+      "displayName": "Wins",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 9,
+      "displayValue": "9",
+      "displayType": "Number"
+     },
+     "matchesLost": {
+      "percentile": 74.0,
+      "displayName": "Losses",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 4,
+      "displayValue": "4",
+      "displayType": "Number"
+     },
+     "matchesAbandoned": {
+      "percentile": 73.0,
+      "displayName": "Abandons",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 3,
+      "displayValue": "3",
+      "displayType": "Number"
+     },
+     "winPercentage": {
+      "percentile": 58.0,
+      "displayName": "Match Win %",
+      "metadata": {},
+      "value": 56.25,
+      "displayValue": "56.2%",
+      "displayType": "NumberPercentage"
+     },
+     "kills": {
+      "percentile": 96.5,
+      "displayName": "Kills",
+      "metadata": {},
+      "value": 797,
+      "displayValue": "797",
+      "displayType": "Number"
+     },
+     "deaths": {
+      "percentile": 95.2,
+      "displayName": "Deaths",
+      "metadata": {},
+      "value": 570,
+      "displayValue": "570",
+      "displayType": "Number"
+     },
+     "rank": {
+      "displayName": "Rank",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "maxRank": {
+      "displayName": "Max Rank",
+      "metadata": {},
+      "value": null,
+      "displayValue": null,
+      "displayType": "Number"
+     },
+     "rankPoints": {
+      "percentile": 0.0,
+      "displayName": "Rank Points",
+      "metadata": {
+       "name": "NO RANK",
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/small/unranked.png",
+       "topRankPosition": 0
+      },
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "maxRankPoints": {
+      "displayName": "Max Rank Points",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/unknown.png"
+      },
+      "value": null,
+      "displayValue": null,
+      "displayType": "Number"
+     },
+     "topRankPosition": {
+      "displayName": "Top Rank Position",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "kdRatio": {
+      "percentile": 84.0,
+      "displayName": "K/D",
+      "metadata": {},
+      "value": 1.3982456140350876,
+      "displayValue": "1.40",
+      "displayType": "NumberPrecision2"
+     },
+     "killsPerGame": {
+      "percentile": 90.0,
+      "displayName": "Kills/Game",
+      "metadata": {},
+      "value": 49.8125,
+      "displayValue": "49.81",
+      "displayType": "NumberPrecision2"
+     }
+    }
+   },
+   {
+    "type": "season",
+    "attributes": {
+     "season": 43,
+     "gamemode": "pvp_standard",
+     "sessionType": "standard"
+    },
+    "metadata": {
+     "name": "Fake Season",
+     "seasonName": "Fake Season",
+     "shortName": "Y11S3",
+     "color": "#e87930",
+     "gamemodeName": "Standard",
+     "rankType": "rp",
+     "sessionTypeName": "Standard"
+    },
+    "expiryDate": "0001-01-01T00:00:00+00:00",
+    "stats": {
+     "matchesPlayed": {
+      "percentile": 92.0,
+      "displayName": "Matches",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 89,
+      "displayValue": "89",
+      "displayType": "Number"
+     },
+     "matchesWon": {
+      "percentile": 90.0,
+      "displayName": "Wins",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 40,
+      "displayValue": "40",
+      "displayType": "Number"
+     },
+     "matchesLost": {
+      "percentile": 92.0,
+      "displayName": "Losses",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 49,
+      "displayValue": "49",
+      "displayType": "Number"
+     },
+     "matchesAbandoned": {
+      "percentile": 0.0,
+      "displayName": "Abandons",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "winPercentage": {
+      "percentile": 26.0,
+      "displayName": "Match Win %",
+      "metadata": {},
+      "value": 44.9438202247191,
+      "displayValue": "44.9%",
+      "displayType": "NumberPercentage"
+     },
+     "kills": {
+      "percentile": 91.0,
+      "displayName": "Kills",
+      "metadata": {},
+      "value": 324,
+      "displayValue": "324",
+      "displayType": "Number"
+     },
+     "deaths": {
+      "percentile": 93.0,
+      "displayName": "Deaths",
+      "metadata": {},
+      "value": 387,
+      "displayValue": "387",
+      "displayType": "Number"
+     },
+     "rank": {
+      "displayName": "Rank",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "maxRank": {
+      "displayName": "Max Rank",
+      "metadata": {},
+      "value": null,
+      "displayValue": null,
+      "displayType": "Number"
+     },
+     "rankPoints": {
+      "percentile": 0.0,
+      "displayName": "Rank Points",
+      "metadata": {
+       "name": "NO RANK",
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/small/unranked.png",
+       "topRankPosition": 0
+      },
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "maxRankPoints": {
+      "displayName": "Max Rank Points",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/unknown.png"
+      },
+      "value": null,
+      "displayValue": null,
+      "displayType": "Number"
+     },
+     "topRankPosition": {
+      "displayName": "Top Rank Position",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "kdRatio": {
+      "percentile": 36.0,
+      "displayName": "K/D",
+      "metadata": {},
+      "value": 0.8372093023255814,
+      "displayValue": "0.84",
+      "displayType": "NumberPrecision2"
+     },
+     "killsPerGame": {
+      "percentile": 44.0,
+      "displayName": "Kills/Game",
+      "metadata": {},
+      "value": 3.640449438202247,
+      "displayValue": "3.64",
+      "displayType": "NumberPrecision2"
+     }
+    }
+   },
+   {
+    "type": "season",
+    "attributes": {
+     "season": 43,
+     "gamemode": "pvp_living_game_mode",
+     "sessionType": "dual-front"
+    },
+    "metadata": {
+     "name": "Fake Season",
+     "seasonName": "Fake Season",
+     "shortName": "Y11S3",
+     "color": "#e87930",
+     "gamemodeName": "Dual Front",
+     "rankType": "rp",
+     "sessionTypeName": "Dual Front"
+    },
+    "expiryDate": "0001-01-01T00:00:00+00:00",
+    "stats": {
+     "matchesPlayed": {
+      "percentile": 77.0,
+      "displayName": "Matches",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 23,
+      "displayValue": "23",
+      "displayType": "Number"
+     },
+     "matchesWon": {
+      "percentile": 69.0,
+      "displayName": "Wins",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 9,
+      "displayValue": "9",
+      "displayType": "Number"
+     },
+     "matchesLost": {
+      "percentile": 70.0,
+      "displayName": "Losses",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 9,
+      "displayValue": "9",
+      "displayType": "Number"
+     },
+     "matchesAbandoned": {
+      "percentile": 67.0,
+      "displayName": "Abandons",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 5,
+      "displayValue": "5",
+      "displayType": "Number"
+     },
+     "winPercentage": {
+      "percentile": 35.0,
+      "displayName": "Match Win %",
+      "metadata": {},
+      "value": 39.130434782608695,
+      "displayValue": "39.1%",
+      "displayType": "NumberPercentage"
+     },
+     "kills": {
+      "percentile": 71.0,
+      "displayName": "Kills",
+      "metadata": {},
+      "value": 40,
+      "displayValue": "40",
+      "displayType": "Number"
+     },
+     "deaths": {
+      "percentile": 75.0,
+      "displayName": "Deaths",
+      "metadata": {},
+      "value": 51,
+      "displayValue": "51",
+      "displayType": "Number"
+     },
+     "rank": {
+      "displayName": "Rank",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "maxRank": {
+      "displayName": "Max Rank",
+      "metadata": {},
+      "value": null,
+      "displayValue": null,
+      "displayType": "Number"
+     },
+     "rankPoints": {
+      "percentile": 0.0,
+      "displayName": "Rank Points",
+      "metadata": {
+       "name": "NO RANK",
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/small/unranked.png",
+       "topRankPosition": 0
+      },
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "maxRankPoints": {
+      "displayName": "Max Rank Points",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/unknown.png"
+      },
+      "value": null,
+      "displayValue": null,
+      "displayType": "Number"
+     },
+     "topRankPosition": {
+      "displayName": "Top Rank Position",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "kdRatio": {
+      "percentile": 40.0,
+      "displayName": "K/D",
+      "metadata": {},
+      "value": 0.7843137254901961,
+      "displayValue": "0.78",
+      "displayType": "NumberPrecision2"
+     },
+     "killsPerGame": {
+      "percentile": 34.0,
+      "displayName": "Kills/Game",
+      "metadata": {},
+      "value": 1.7391304347826086,
+      "displayValue": "1.74",
+      "displayType": "NumberPrecision2"
+     }
+    }
+   },
+   {
+    "type": "season",
+    "attributes": {
+     "season": 36,
+     "gamemode": "pvp_ranked",
+     "sessionType": "ranked",
+     "region": "emea"
+    },
+    "metadata": {
+     "name": "Collision Point",
+     "seasonName": "Collision Point",
+     "shortName": "Y9S4",
+     "color": "#c1922c",
+     "gamemodeName": "Ranked",
+     "rankType": "rp",
+     "sessionTypeName": "Ranked"
+    },
+    "expiryDate": "0001-01-01T00:00:00+00:00",
+    "stats": {
+     "matchesPlayed": {
+      "percentile": 97.9,
+      "displayName": "Matches",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 299,
+      "displayValue": "299",
+      "displayType": "Number"
+     },
+     "matchesWon": {
+      "percentile": 96.9,
+      "displayName": "Wins",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 140,
+      "displayValue": "140",
+      "displayType": "Number"
+     },
+     "matchesLost": {
+      "percentile": 98.3,
+      "displayName": "Losses",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 159,
+      "displayValue": "159",
+      "displayType": "Number"
+     },
+     "matchesAbandoned": {
+      "percentile": 0.0,
+      "displayName": "Abandons",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "winPercentage": {
+      "percentile": 36.0,
+      "displayName": "Match Win %",
+      "metadata": {},
+      "value": 46.82274247491639,
+      "displayValue": "46.8%",
+      "displayType": "NumberPercentage"
+     },
+     "kills": {
+      "percentile": 97.1,
+      "displayName": "Kills",
+      "metadata": {},
+      "value": 1257,
+      "displayValue": "1,257",
+      "displayType": "Number"
+     },
+     "deaths": {
+      "percentile": 98.0,
+      "displayName": "Deaths",
+      "metadata": {},
+      "value": 1338,
+      "displayValue": "1,338",
+      "displayType": "Number"
+     },
+     "rank": {
+      "displayName": "Rank",
+      "metadata": {},
+      "value": 31,
+      "displayValue": "31",
+      "displayType": "Number"
+     },
+     "maxRank": {
+      "displayName": "Max Rank",
+      "metadata": {},
+      "value": 34,
+      "displayValue": "34",
+      "displayType": "Number"
+     },
+     "rankPoints": {
+      "rank": 48472,
+      "percentile": 98.5,
+      "displayName": "Rank Points",
+      "metadata": {
+       "name": "DIAMOND V",
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/small/diamond-5.png",
+       "topRankPosition": 0
+      },
+      "value": 4075,
+      "displayValue": "4,075",
+      "displayType": "Number"
+     },
+     "maxRankPoints": {
+      "percentile": 99.0,
+      "displayName": "Max Rank Points",
+      "metadata": {
+       "name": "DIAMOND II",
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/small/diamond-2.png"
+      },
+      "value": 4343,
+      "displayValue": "4,343",
+      "displayType": "Number"
+     },
+     "topRankPosition": {
+      "displayName": "Top Rank Position",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "kdRatio": {
+      "percentile": 52.0,
+      "displayName": "K/D",
+      "metadata": {},
+      "value": 0.9394618834080718,
+      "displayValue": "0.94",
+      "displayType": "NumberPrecision2"
+     },
+     "killsPerGame": {
+      "percentile": 55.0,
+      "displayName": "Kills/Game",
+      "metadata": {},
+      "value": 4.2040133779264215,
+      "displayValue": "4.20",
+      "displayType": "NumberPrecision2"
+     }
+    }
+   },
+   {
+    "type": "season",
+    "attributes": {
+     "season": 36,
+     "gamemode": "pvp_ranked",
+     "sessionType": "ranked",
+     "region": "ncsa"
+    },
+    "metadata": {
+     "name": "Collision Point",
+     "seasonName": "Collision Point",
+     "shortName": "Y9S4",
+     "color": "#c1922c",
+     "gamemodeName": "Ranked",
+     "rankType": "rp",
+     "sessionTypeName": "Ranked"
+    },
+    "expiryDate": "0001-01-01T00:00:00+00:00",
+    "stats": {
+     "matchesPlayed": {
+      "percentile": 97.9,
+      "displayName": "Matches",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "299",
+      "displayType": "Number"
+     },
+     "matchesWon": {
+      "percentile": 96.9,
+      "displayName": "Wins",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "140",
+      "displayType": "Number"
+     },
+     "matchesLost": {
+      "percentile": 98.3,
+      "displayName": "Losses",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "159",
+      "displayType": "Number"
+     },
+     "matchesAbandoned": {
+      "percentile": 0.0,
+      "displayName": "Abandons",
+      "displayCategory": "Game",
+      "category": "game",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "winPercentage": {
+      "percentile": 36.0,
+      "displayName": "Match Win %",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "46.8%",
+      "displayType": "NumberPercentage"
+     },
+     "kills": {
+      "percentile": 97.1,
+      "displayName": "Kills",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "1,257",
+      "displayType": "Number"
+     },
+     "deaths": {
+      "percentile": 98.0,
+      "displayName": "Deaths",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "1,338",
+      "displayType": "Number"
+     },
+     "rank": {
+      "displayName": "Rank",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "31",
+      "displayType": "Number"
+     },
+     "maxRank": {
+      "displayName": "Max Rank",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "34",
+      "displayType": "Number"
+     },
+     "rankPoints": {
+      "rank": 48472,
+      "percentile": 98.5,
+      "displayName": "Rank Points",
+      "metadata": {
+       "name": "DIAMOND V",
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/small/diamond-5.png",
+       "topRankPosition": 0
+      },
+      "value": 0,
+      "displayValue": "4,075",
+      "displayType": "Number"
+     },
+     "maxRankPoints": {
+      "percentile": 99.0,
+      "displayName": "Max Rank Points",
+      "metadata": {
+       "name": "DIAMOND II",
+       "imageUrl": "https://trackercdn.com/cdn/r6.tracker.network/ranks/s28/small/diamond-2.png"
+      },
+      "value": 0,
+      "displayValue": "4,343",
+      "displayType": "Number"
+     },
+     "topRankPosition": {
+      "displayName": "Top Rank Position",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0",
+      "displayType": "Number"
+     },
+     "kdRatio": {
+      "percentile": 52.0,
+      "displayName": "K/D",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "0.94",
+      "displayType": "NumberPrecision2"
+     },
+     "killsPerGame": {
+      "percentile": 55.0,
+      "displayName": "Kills/Game",
+      "metadata": {},
+      "value": 0,
+      "displayValue": "4.20",
+      "displayType": "NumberPrecision2"
+     }
+    }
+   }
+  ],
+  "availableSegments": [],
+  "expiryDate": "2025-06-03T03:05:43.2523011+00:00"
+ }
+}

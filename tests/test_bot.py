@@ -14,13 +14,13 @@ from r6tracker.bot.client import R6Bot
 from r6tracker.bot.complaints import LogButton, LogModal, TallyButton, complaint_view
 from r6tracker.config import Settings
 from r6tracker.models import MatchBatch, OperatorDelta, PlayerInfo, Snapshot, utcnow
-from r6tracker.sources.parse import parse_full_profiles, parse_operator_list, parse_profile_stats
+from r6tracker.sources.trn_parse import parse_matches, parse_operators, snapshot_from_profile
 from r6tracker.tracker import PlaySummary, PollResult
 
 
 @pytest.fixture
 def bot(tmp_path):
-    b = R6Bot(Settings(arenyze_api_key="x", data_dir=tmp_path, timezone="Europe/Stockholm"))
+    b = R6Bot(Settings(trn_api_key="x", data_dir=tmp_path, timezone="Europe/Stockholm"))
     yield b
     b.storage.close()
 
@@ -31,14 +31,16 @@ def tp(bot):
 
 
 def full_snapshot() -> Snapshot:
-    snap = Snapshot(player=PlayerInfo("Ludvig", user_id="u1"), sources=["ubisoft", "arenyze"])
-    snap.boards = parse_full_profiles(load("ubisoft_full_profiles.json"))
-    stats = parse_profile_stats(load("ubisoft_profile_stats.json"))
-    snap.level, snap.playtime_seconds, snap.pvp_seconds = stats["level"], stats["playtime_seconds"], stats["pvp_seconds"]
-    snap.commendations, snap.battle_pass_level = stats["commendations"], stats["battle_pass_level"]
-    snap.operators = parse_operator_list(load("arenyze_operators.json"))
+    """A realistic snapshot: the (anonymized) real R6 Tracker profile plus operator stats."""
+    snap = snapshot_from_profile(load("trn_profile.json"), "uplay")
+    snap.sources = ["R6 Tracker"]
+    snap.operators = parse_operators(load("trn_operators.json"))
     snap.operator_season = "Y11S3"
     return snap
+
+
+def real_matches() -> list[MatchBatch]:
+    return parse_matches(load("trn_matches.json"), PlayerInfo("Ludvig", user_id="11111111-2222-3333-4444-555555555555"))[0]
 
 
 def assert_fits(embed: discord.Embed) -> None:
@@ -97,6 +99,9 @@ def test_embeds_fit_discord_limits(tp):
         embeds.operator_embed(tp.info, ops[0], "Y11S3"),
         embeds.matches_embed(tp.info, [ranked_loss()] * 40, tz),
         embeds.players_embed([(tp, snap)], tz, 5),
+        *[embeds.real_match_embed(tp.info, m, snap) for m in real_matches()],
+        embeds.summary_embed(tp.info, PlaySummary(real_matches() * 5), tz, "Session", ""),
+        embeds.matches_embed(tp.info, real_matches() * 7, tz),
     ]
     for e in built:
         assert_fits(e)
@@ -106,7 +111,39 @@ def test_embeds_fit_discord_limits(tp):
     assert "Platinum V → **Gold I**" in m.fields[0].value and "−22 RP" in m.fields[0].value
     assert m.thumbnail.url == "https://r6operators.marcopixel.eu/icons/png/ash.png"
     assert built[1].title == "🎮 Ludvig played 2 matches (0W 2L)"
-    assert "Emerald IV" in built[5].fields[0].value
+    stats = {f.name: f.value for f in built[5].fields}
+    assert "Emerald II" in stats["🏅 Ranked"] and "peak Diamond V" in stats["🏅 Ranked"]
+    assert "5,609 matches" in stats["📚 Lifetime"] and "49% headshots" in stats["📚 Lifetime"]
+    assert stats["🧠 Playstyle"] == "⚔️ Supporter · 🛡️ Trapper"
+    assert stats["Formerly known as"] == "OldLudvig"
+
+
+def test_real_match_embed():
+    snap = full_snapshot()
+    loss, win = real_matches()[:2]
+    e = embeds.real_match_embed(snap.player, loss, snap)
+    assert e.title == "💀 Ludvig lost a Ranked match on Villa"
+    assert "**2–4** in rounds" in e.description and "**K/D/A** 1 / 5 / 1" in e.description
+    assert "−19 RP, now 2,363" in e.description
+    fields = {f.name: f.value for f in e.fields}
+    assert fields["Operators"].startswith("🛡️ Kapkan · ⚔️ Gridlock · ⚔️ Ace")
+    assert e.thumbnail.url.endswith("/kapkan.png")
+    w = embeds.real_match_embed(snap.player, win, snap)
+    assert w.title == "🏆 Ludvig won a Ranked match on Chalet"
+    assert {f.name: f.value for f in w.fields}["Highlights"] == "1× 3K round · 🧊 1 clutch · ⚡ 1 opening kill"
+
+
+def test_news_embeds(tp):
+    snap = full_snapshot()
+    ms = real_matches()
+    prev = Snapshot(player=snap.player)
+    one = PollResult(player=tp, snapshot=snap, previous=prev, batches=ms[:2], real_matches=True)
+    assert [e.title.split(" on ")[1] for e in embeds.news_embeds(one, utcnow().tzinfo)] == ["Villa", "Chalet"]
+    many = PollResult(player=tp, snapshot=snap, previous=prev, batches=ms * 2, real_matches=True)
+    [combined] = embeds.news_embeds(many, utcnow().tzinfo)
+    assert combined.title.startswith("🎮 Ludvig played 12 matches")
+    first = PollResult(player=tp, snapshot=snap, previous=None, backfilled=ms, real_matches=True)
+    assert embeds.news_embeds(first, utcnow().tzinfo) == [] and not first.has_news
 
 
 # --------------------------------------------------------------- complaints

@@ -1,4 +1,5 @@
-"""Turn raw API JSON into our models. Written defensively: these APIs are unofficial and change."""
+"""Parse the Arenyze API (which mirrors Ubisoft's full_profiles format). Written defensively:
+these APIs are unofficial and change."""
 
 from __future__ import annotations
 
@@ -75,39 +76,6 @@ def _parse_board(board_id: str, entry: dict) -> BoardStats:
     )
 
 
-def parse_profile_stats(data: dict | None) -> dict[str, Any]:
-    """Parse /v1/profiles/stats (level, playtime, commendations, battle pass level)."""
-    out: dict[str, Any] = {}
-    profiles = (data or {}).get("profiles") or []
-    if not profiles:
-        return out
-    stats = profiles[0].get("stats") or {}
-
-    def value(name: str) -> int | None:
-        s = stats.get(name)
-        return _int(s.get("value")) if isinstance(s, dict) else None
-
-    out["level"] = value("PClearanceLevel")
-    out["playtime_seconds"] = value("PTotalTimePlayed")
-    out["pvp_seconds"] = value("PPvPTimePlayed")
-    out["pve_seconds"] = value("PPvETimePlayed")
-    commendations: dict[str, int] = {}
-    if value("Commendations") is not None:
-        commendations["total"] = value("Commendations") or 0
-    bp: dict[int, int] = {}
-    for key, s in stats.items():
-        if not isinstance(s, dict):
-            continue
-        if key.startswith("CommendationsType.commendtype."):
-            commendations[key.rsplit(".", 1)[-1].lower()] = _int(s.get("value"))
-        elif key.startswith("PlayerBPCurrentLevelPerSeason.seasonid."):
-            bp[_int(key.rsplit(".", 1)[-1])] = _int(s.get("value"))
-    out["commendations"] = commendations
-    if bp:
-        out["battle_pass_level"] = bp[max(bp)]
-    return out
-
-
 def _side(raw: Any, name: str) -> str | None:
     if isinstance(raw, str) and raw.strip():
         s = raw.strip().lower()
@@ -159,10 +127,10 @@ def parse_operator_list(data: Any) -> list[OperatorStats]:
                 time_played_ms=_int(e.get("timePlayedMs")),
             )
         )
-    return _merge_duplicates(ops)
+    return merge_duplicate_operators(ops)
 
 
-def _merge_duplicates(ops: list[OperatorStats]) -> list[OperatorStats]:
+def merge_duplicate_operators(ops: list[OperatorStats]) -> list[OperatorStats]:
     """If an API ever lists the same operator+side twice, add them up instead of guessing."""
     merged: dict[str, OperatorStats] = {}
     for op in ops:

@@ -1,8 +1,11 @@
-"""Polls stats, detects new matches by diffing against the last snapshot, and summarises sessions.
+"""Polls stats, records new matches, and summarises sessions.
 
-The APIs only give running totals (e.g. "142 ranked wins this season"), never a match list.
-So every poll we compare with the previous numbers: if wins+losses+abandons went up on a
-playlist, those are new matches, and the change in kills/deaths/RP is how they went.
+With R6 Tracker the source has a real match history: each poll fetches the latest matches and
+stores the ones we haven't seen (by match id), with map, score, K/D/A, RP change and operators.
+
+Sources without match history only give running totals ("142 ranked wins this season"). Then
+every poll compares with the previous numbers: if wins+losses+abandons went up on a playlist,
+those are new matches, and the change in kills/deaths/RP is how they went.
 """
 
 from __future__ import annotations
@@ -31,6 +34,7 @@ from .storage import Storage, TrackedPlayer
 log = logging.getLogger(__name__)
 
 OPERATOR_MODE = "all"  # operator stats we track: all playlists together
+MAX_MATCH_PAGES = 5  # when catching up after downtime, read at most this many pages of match history
 
 
 # ------------------------------------------------------------------ diffing
@@ -162,6 +166,23 @@ class PlaySummary:
         return [e for e in self.events if e.board == "ranked"]
 
     @property
+    def operator_counts(self) -> list[tuple[str, int]]:
+        """Operators from real match history: how many of these matches each one was played in."""
+        counts: dict[str, int] = defaultdict(int)
+        for e in self.events:
+            for op in e.operators:
+                counts[op] += 1
+        return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+
+    @property
+    def maps(self) -> list[tuple[str, int]]:
+        counts: dict[str, int] = defaultdict(int)
+        for e in self.events:
+            if e.map_name:
+                counts[e.map_name] += 1
+        return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+
+    @property
     def rp_change(self) -> int:
         return sum(e.rp_change for e in self.ranked_events)
 
@@ -209,7 +230,9 @@ class PollResult:
     player: TrackedPlayer
     snapshot: Snapshot | None = None
     previous: Snapshot | None = None
-    batches: list[MatchBatch] = field(default_factory=list)
+    batches: list[MatchBatch] = field(default_factory=list)  # new matches, to announce
+    backfilled: list[MatchBatch] = field(default_factory=list)  # older matches saved as history, not announced
+    real_matches: bool = False  # batches are real matches from match history (one per match)
     operator_deltas: list[OperatorDelta] = field(default_factory=list)
     error: str | None = None
 
@@ -219,7 +242,8 @@ class PollResult:
 
     @property
     def has_news(self) -> bool:
-        return bool(self.batches or self.operator_deltas)
+        # With real matches, operators come with each match; no separate operator news.
+        return bool(self.batches or (self.operator_deltas and not self.real_matches))
 
 
 class Tracker:
@@ -284,6 +308,10 @@ class Tracker:
             for board_id, b in prev.boards.items():
                 if board_id not in snap.boards and b.season_id >= season:
                     snap.boards[board_id] = b
+
+        if self.fetcher.has_matches and await self._fetch_new_matches(tp, snap, result):
+            result.real_matches = True
+        elif prev:
             result.batches = diff_boards(prev, snap)
 
         if self.fetcher.has_operators:
@@ -293,12 +321,51 @@ class Tracker:
         if (snap.player.name, snap.player.user_id) != (tp.info.name, tp.info.user_id):
             self.storage.update_player_info(tp.id, snap.player)
         self.storage.save_snapshot(tp.id, snap)
-        for b in result.batches:
+        for b in result.backfilled + result.batches:
             self.storage.add_match_batch(tp.id, b)
+        if result.backfilled and not result.batches:
+            # History we just learned about isn't news: don't announce it as a finished session either.
+            self.storage.set_setting(f"session_announced:{tp.id}", str(max(b.id or 0 for b in result.backfilled)))
         if result.operator_deltas:
             self.storage.add_operator_deltas(tp.id, result.operator_deltas, now, snap.operator_season)
         self.storage.mark_checked(tp.id, error="; ".join(snap.errors.values()) or None, when=now)
         return result
+
+    async def _fetch_new_matches(self, tp: TrackedPlayer, snap: Snapshot, result: PollResult) -> bool:
+        """Read match history and keep the matches we haven't stored yet. False if there's no history."""
+        assert self.fetcher
+        baseline = not self.storage.has_real_matches(tp.id)  # first look: save as history, don't announce
+        found: dict[str, MatchBatch] = {}
+        cursor = None
+        for page_no in range(1 if baseline else MAX_MATCH_PAGES):
+            try:
+                page = await self.fetcher.matches(snap.player, cursor)
+            except SourceError as e:
+                # Nothing is lost: matches are recognised by id, so the next poll picks them up.
+                log.warning("Couldn't fetch matches for %s: %s", tp.name, e)
+                snap.errors["matches"] = str(e)
+                return True
+            if page is None:  # the source has no match history after all
+                return page_no > 0
+            matches, cursor = page
+            known = self.storage.known_match_ids(tp.id, [m.match_id or "" for m in matches])
+            fresh = [m for m in matches if m.match_id and m.match_id not in known]
+            for m in fresh:
+                found.setdefault(m.match_id or "", m)
+            if len(fresh) < len(matches) or not matches or cursor is None:
+                break
+        else:
+            if not baseline:
+                log.warning("%s played more than %d pages of matches since the last check; older ones skipped",
+                            tp.name, MAX_MATCH_PAGES)
+        new = sorted(found.values(), key=lambda m: m.detected_at)
+        for m in new:
+            m.season_id = m.season_id or snap.season_id
+        if baseline:
+            result.backfilled = new
+        else:
+            result.batches = new
+        return True
 
     async def _update_operators(
         self, tp: TrackedPlayer, prev: Snapshot | None, snap: Snapshot, now: datetime, new_matches: bool,
@@ -350,7 +417,7 @@ class Tracker:
 
     def _with_operators(self, tp: TrackedPlayer, events: list[MatchBatch]) -> PlaySummary:
         s = PlaySummary(events)
-        if events and s.start and s.end:
+        if events and s.start and s.end and not any(e.match_id for e in events):
             # Operator numbers can arrive a little after the matches themselves.
             ops = self.storage.operator_events(tp.id, since=s.start, until=s.end + self.operator_catchup)
             s.operators = sum_operator_deltas([o.delta for o in ops])

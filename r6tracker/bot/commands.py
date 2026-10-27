@@ -29,9 +29,10 @@ log = logging.getLogger(__name__)
 PLAYLISTS = {
     "all": "all playlists",
     "ranked": "Ranked",
-    "standard": "Quick Match",
-    "unranked": "Unranked",
+    "quick-match": "Quick Match",
+    "standard": "Standard",
     "dual-front": "Dual Front",
+    "siege-cup": "Siege Cup",
 }
 SORT_CHOICES = [
     app_commands.Choice(name="Rounds played", value="rounds"),
@@ -45,7 +46,7 @@ SIDE_CHOICES = [
     app_commands.Choice(name="Attack", value="attacker"),
     app_commands.Choice(name="Defense", value="defender"),
 ]
-PLAYLIST_CHOICES = [app_commands.Choice(name=label.capitalize(), value=key) for key, label in PLAYLISTS.items()]
+PLAYLIST_CHOICES = [app_commands.Choice(name=label[0].upper() + label[1:], value=key) for key, label in PLAYLISTS.items()]
 OPERATOR_CACHE_SECONDS = 300
 
 
@@ -82,8 +83,6 @@ class StatsCog(commands.Cog):
         return snap
 
     async def _operators(self, tp: TrackedPlayer, season: str | None, playlist: str) -> tuple[list[OperatorStats], str]:
-        if not self.bot.fetcher.has_operators:
-            raise UserError("Operator stats need an Arenyze API key (ARENYZE_API_KEY in the bot's .env).")
         snap = self._latest(tp)
         season = (season or "current").strip()
         if season.lower() == "current":
@@ -262,15 +261,12 @@ class StatsCog(commands.Cog):
         result = await self.bot.tracker.poll(tp, force_operators=True)
         if result.error:
             raise UserError(f"Couldn't fetch stats: {result.error}")
-        if result.has_news and not result.first_poll:
+        news = embeds.news_embeds(result, self.tz, self.bot.fetcher.has_operators) if result.has_news else []
+        if news:
             # Post it where it normally goes too, if that's another channel.
             if self.bot.notify_channel_id() not in (None, interaction.channel_id):
                 await self.bot.announce(result)
-            embed = (
-                embeds.match_embed(result, self.tz, self.bot.fetcher.has_operators)
-                if result.batches else embeds.operators_update_embed(result)
-            )
-            await interaction.followup.send(embed=embed, view=complaint_view(tp))
+            await interaction.followup.send(embeds=news[:10], view=complaint_view(tp))
             return
         snap = result.snapshot
         assert snap is not None
