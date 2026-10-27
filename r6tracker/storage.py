@@ -334,6 +334,23 @@ class Storage:
         self.db.commit()
         return True
 
+    def snapshot_as_of(self, player_id: int, when: datetime) -> Snapshot | None:
+        """The stats as they were at `when`: the newest snapshot created at or before then.
+
+        (Each row's taken_at column moves forward while the stats stay the same; the time it was
+        created is kept in its data.)
+        """
+        row = self.db.execute(
+            "SELECT taken_at, data FROM snapshots WHERE player_id = ? AND json_extract(data, '$.taken_at') <= ? "
+            "ORDER BY json_extract(data, '$.taken_at') DESC, id DESC LIMIT 1",
+            (player_id, _ts(when)),
+        ).fetchone()
+        if row is None:
+            return None
+        snap = Snapshot.from_dict(json.loads(row["data"]))
+        snap.taken_at = when
+        return snap
+
     def snapshots(self, player_id: int, since: datetime | None = None) -> list[Snapshot]:
         rows = self.db.execute(
             "SELECT taken_at, data FROM snapshots WHERE player_id = ? AND taken_at >= ? ORDER BY taken_at",
@@ -397,6 +414,24 @@ class Storage:
             args.append(_ts(since))
         return self.db.execute(sql, args).fetchone()[0] or 0
 
+    def last_ranked_event(self, player_id: int) -> MatchBatch | None:
+        """The newest stored ranked match that came with rank data."""
+        for r in self.db.execute(
+            "SELECT * FROM match_events WHERE player_id = ? AND board = 'ranked' ORDER BY detected_at DESC, id DESC "
+            "LIMIT 20",
+            (player_id,),
+        ):
+            b = _batch(r)
+            if not b.extra.get("no_rank"):
+                return b
+        return None
+
+    def last_event_at_upto(self, player_id: int, event_id: int) -> datetime | None:
+        row = self.db.execute(
+            "SELECT MAX(detected_at) FROM match_events WHERE player_id = ? AND id <= ?", (player_id, event_id)
+        ).fetchone()
+        return _dt(row[0])
+
     def last_totals_event_at(self, player_id: int) -> datetime | None:
         """When the newest match worked out from the totals (not from match history) was noticed."""
         row = self.db.execute(
@@ -449,10 +484,14 @@ class Storage:
         return row["value"] if row else default
 
     def set_setting(self, key: str, value: str | None) -> None:
-        self.db.execute(
-            "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-            (key, value),
-        )
+        """Store a setting (None removes it)."""
+        if value is None:
+            self.db.execute("DELETE FROM settings WHERE key = ?", (key,))
+        else:
+            self.db.execute(
+                "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                (key, value),
+            )
         self.db.commit()
 
     # ------------------------------------------------------------ complaints

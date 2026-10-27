@@ -1,5 +1,5 @@
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from conftest import FakeFetcher, back_in_time, board
 
@@ -433,10 +433,43 @@ def test_lasting_history_outage_falls_back_to_totals_without_losing_matches(stor
     fetcher.matches_error = SourceError("R6 Tracker down")
     fetcher.boards = {"ranked": ranked(wins=11)}
     assert not run(tr.poll(tp)).batches  # a hiccup at first: wait for history
-    tr._history_failing_since[tp.id] -= timedelta(minutes=31)
+    outage_for(storage, tp, minutes=31)
     fetcher.boards = {"ranked": ranked(wins=12)}
     res = run(tr.poll(tp))
     assert not res.real_matches and [(b.matches, b.wins) for b in res.batches] == [(2, 2)]  # both, none lost
+
+
+def outage_for(storage, tp, minutes):
+    """Pretend match history has been failing for this player for `minutes`."""
+    key = f"history_failing_since_at:{tp.id}"
+    since = datetime.fromisoformat(storage.get_setting(key))
+    storage.set_setting(key, (since - timedelta(minutes=minutes)).isoformat())
+
+
+def test_long_outage_over_several_retries_and_a_restart_loses_nothing(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = [real_match(0, minutes_ago=100)]
+    tp, _ = run(tr.add_player("Ludvig"))
+    run(tr.poll(tp))
+    fetcher.matches_error = SourceError("R6 Tracker down")
+    wins = 10
+    counted = 0
+    for cycle in range(3):
+        wins += 1
+        fetcher.boards = {"ranked": ranked(wins=wins)}
+        counted += sum(b.matches for b in run(tr.poll(tp)).batches)  # hiccup (cycle 0) or failover
+        if cycle == 0:
+            outage_for(storage, tp, minutes=31)
+        tr._no_history_until.clear()  # time to retry history (it still fails)
+        if cycle == 1:
+            tr = make(storage, fetcher)  # the bot restarts in the middle of the outage
+        wins += 1
+        fetcher.boards = {"ranked": ranked(wins=wins)}
+        counted += sum(b.matches for b in run(tr.poll(tp)).batches)
+    assert counted == wins - 10 == 6  # every match during the outage counted exactly once
 
 
 def test_failure_on_a_later_page_retries_the_whole_catch_up(storage, fetcher):
@@ -490,3 +523,102 @@ def test_new_matches_get_the_season_only_when_its_certain(storage, fetcher):
     fetcher.boards = {"ranked": ranked(season=44, wins=1)}  # a new season started meanwhile
     fetcher.history = [real_match(2, minutes_ago=0)] + fetcher.history
     assert run(tr.poll(tp)).batches[0].season_id == 0  # might belong to either season
+
+
+def test_previous_rp_comes_from_the_last_snapshot_when_consistent(storage, fetcher):
+    from dataclasses import replace as dc_replace
+
+    from conftest import real_match
+
+    def unknown_prev(m):
+        return dc_replace(m, rp_before=m.rp_after, rank_before=m.rank_after,
+                          extra={"rp_unknown": True, "rank_unknown": True})
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked(rank_points=3000, rank=20)}
+    fetcher.history = []
+    tp, _ = run(tr.add_player("Ludvig"))
+    back_in_time(storage, tp.id, 30)
+    fetcher.boards = {"ranked": ranked(rank_points=3025, rank=21, wins=11)}
+    fetcher.history = [unknown_prev(real_match(1, minutes_ago=0, rp=25))]  # ends at 3025, previous unknown
+    [m] = run(tr.poll(tp)).batches
+    assert (m.rp_before, m.rp_change, m.rank_before, m.rp_known) == (3000, 25, 20, True)
+
+    # The snapshot from before it (3025) matches the last ranked match we stored (3025): fills again.
+    back_in_time(storage, tp.id, 30)
+    fetcher.boards = {"ranked": ranked(rank_points=3005, rank=21, wins=11, losses=9)}
+    fetcher.history = [dc_replace(unknown_prev(real_match(2, minutes_ago=0, won=False, rp=-20)), rp_after=3005)] + fetcher.history
+    [m2] = run(tr.poll(tp)).batches
+    assert (m2.rp_before, m2.rp_change) == (3025, -20)
+
+    # The profile lags behind the match list (still 3025 after m2 ended at 3005): don't guess from it.
+    back_in_time(storage, tp.id, 30)
+    fetcher.boards = {"ranked": ranked(rank_points=3025, rank=21, wins=11, losses=9)}
+    run(tr.poll(tp))
+    back_in_time(storage, tp.id, 30)
+    fetcher.boards = {"ranked": ranked(rank_points=3030, rank=21, wins=12, losses=9)}
+    fetcher.history = [dc_replace(unknown_prev(real_match(3, minutes_ago=0)), rp_after=3030)] + fetcher.history
+    [m3] = run(tr.poll(tp)).batches
+    assert not m3.rp_known
+
+
+def test_unknown_previous_rank_isnt_shown_as_unranked_or_zero():
+    from conftest import real_match
+
+    from r6tracker.bot import embeds
+    from r6tracker.tracker import PlaySummary
+
+    m = real_match(1)
+    m.extra = {"rp_unknown": True, "rank_unknown": True}
+    s = PlaySummary([m])
+    assert s.rank_before is None and not s.rp_known
+    e = embeds.summary_embed(PlayerInfo("Ludvig"), s, datetime.now().astimezone().tzinfo, "Today", "")
+    ranked_field = next(f.value for f in e.fields if f.name == "Ranked")
+    assert "Unranked" not in ranked_field and "±0" not in ranked_field and "RP" not in ranked_field
+    no_rank = real_match(2)
+    no_rank.extra = {"no_rank": True}
+    assert PlaySummary([real_match(3), no_rank]).rank_after == 20  # a match without rank data isn't "Unranked"
+
+
+def test_session_isnt_announced_twice_when_a_match_is_listed_late(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher, session_gap=timedelta(minutes=45))
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = []
+    tp, _ = run(tr.add_player("Ludvig"))
+    back_in_time(storage, tp.id, 200)
+    fetcher.history = [real_match(2, minutes_ago=100), real_match(1, minutes_ago=130)]
+    run(tr.poll(tp))
+    assert tr.finished_session(tp).matches == 2
+    fetcher.history = [real_match(3, minutes_ago=60)] + fetcher.history  # ended 40 min after m2, listed now
+    assert len(run(tr.poll(tp)).batches) == 1
+    assert tr.finished_session(tp) is None
+
+
+def test_legacy_marker_is_migrated_once(storage, fetcher):
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    tp, _ = run(tr.add_player("Ludvig"))
+    back_in_time(storage, tp.id, 30)
+    fetcher.boards = {"ranked": ranked(wins=12)}
+    run(tr.poll(tp))
+    back_in_time(storage, tp.id, 600)
+    last = storage.match_events(tp.id)[-1]
+    storage.set_setting(f"session_announced:{tp.id}", str(last.id))
+    assert tr.finished_session(tp) is None
+    assert storage.get_setting(f"session_announced_at:{tp.id}") is not None
+
+
+def test_late_listed_match_keeps_its_season(storage, fetcher):
+    from conftest import real_match
+
+    tr = make(storage, fetcher)
+    fetcher.boards = {"ranked": ranked()}
+    fetcher.history = []
+    tp, _ = run(tr.add_player("Ludvig"))
+    back_in_time(storage, tp.id, 60)
+    run(tr.poll(tp))
+    back_in_time(storage, tp.id, 5)
+    fetcher.history = [real_match(1, minutes_ago=8)]  # ended before the previous poll, listed only now
+    assert run(tr.poll(tp)).batches[0].season_id == 43

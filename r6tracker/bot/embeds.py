@@ -108,7 +108,7 @@ def match_embed(result: PollResult, tz: tzinfo, operators_enabled: bool = True) 
     for b in batches:
         by_board.setdefault(b.board, []).append(b)
     for board, group in list(by_board.items())[:20]:  # one field per playlist keeps big catch-ups postable
-        first, last = group[0], group[-1]
+        first = group[0]
         k, d = sum(b.kills for b in group), sum(b.deaths for b in group)
         lines = [f"**K/D** {k} / {d} ({ratio(k, d):.2f})"]
         if len(batches) > 1 or first.matches > 1:
@@ -116,11 +116,16 @@ def match_embed(result: PollResult, tz: tzinfo, operators_enabled: bool = True) 
             lines.insert(0, f"**Result** {first.result_text if len(group) == 1 else wl(gw, gl, ga)}")
         if board == "ranked":
             if len(group) == 1:
-                lines.append(f"**Rank** {rank_change(first)}")
+                if first.rp_before or first.rp_after:
+                    lines.append(f"**Rank** {rank_change(first)}")
             else:
-                rp = sum(b.rp_change for b in group if b.rp_known)
-                lines.append(f"**Rank** {rank_name(first.rank_before)} → **{rank_name(last.rank_after)}** "
-                             f"({signed(rp)} RP, now {last.rp_after:,})")
+                part = PlaySummary(group)
+                if part.rank_after is not None:
+                    move = f"**{rank_name(part.rank_after)}**"
+                    if part.rank_before is not None and part.rank_before != part.rank_after:
+                        move = f"{rank_name(part.rank_before)} → {move}"
+                    rp = f"{signed(part.rp_change)} RP, " if part.rp_known else ""
+                    lines.append(f"**Rank** {move} ({rp}now {part.rated[-1].rp_after:,})")
         season_board = snap.boards.get(board)
         if season_board:
             lines.append(f"**Season** {board_line(season_board)}")
@@ -256,7 +261,10 @@ def summary_embed(player: PlayerInfo, s: PlaySummary, tz: tzinfo, title: str, em
     for board, part in s.by_board.items():
         line = f"{part.matches} · {wl(part.wins, part.losses, part.abandons)} · K/D {part.kd:.2f}"
         if board == "ranked" and s.rank_after is not None:
-            line += f"\n{rank_name(s.rank_before)} → **{rank_name(s.rank_after)}** ({signed(s.rp_change)} RP)"
+            move = f"**{rank_name(s.rank_after)}**"
+            if s.rank_before is not None and s.rank_before != s.rank_after:
+                move = f"{rank_name(s.rank_before)} → {move}"
+            line += f"\n{move}" + (f" ({signed(s.rp_change)} RP)" if s.rp_known else "")
         embed.add_field(name=part.events[0].label, value=line, inline=True)
     counts = s.operator_counts
     if counts:

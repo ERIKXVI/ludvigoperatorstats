@@ -29,8 +29,10 @@ GAMEMODE_BOARDS = {
 }
 
 PLATFORM_SLUGS = {"uplay": "ubi", "psn": "psn", "xbl": "xbl"}
-# A match's missing "previous RP" is only taken from an older match that ended at most this long before.
-FILL_FROM_WITHIN = timedelta(hours=3)
+# A match's missing "previous RP" is only taken from an older match that ended at most this long before,
+FILL_FROM_WITHIN = timedelta(hours=24)
+# and only if the RP change that implies is believable for one match (a new season resets RP by far more).
+MAX_RP_STEP = 150
 SLUG_PLATFORMS = {"ubi": "uplay", "uplay": "uplay", "psn": "psn", "xbl": "xbl"}
 
 _PLAYSTYLE = re.compile(r"playstyle(Attacker|Defender)(\w+)")
@@ -258,6 +260,17 @@ def parse_operators(payload: Any) -> list[OperatorStats]:
 # ----------------------------------------------------------------- matches
 
 
+def fill_previous_rank(b: MatchBatch, rp_before: int, rank_before: int) -> bool:
+    """Use a previous RP/rank from elsewhere for a match whose own is missing, if believable."""
+    if not rp_before or abs(b.rp_after - rp_before) > MAX_RP_STEP:
+        return False
+    if b.extra.pop("rp_unknown", False):
+        b.rp_before = rp_before
+    if b.extra.pop("rank_unknown", False):
+        b.rank_before = rank_before
+    return True
+
+
 def requesting_player_id(payload: Any) -> str | None:
     """The Ubisoft id a /matches response is about (to make sure it's the right account)."""
     data = _data(payload)
@@ -278,21 +291,17 @@ def parse_matches(payload: Any, player: PlayerInfo) -> tuple[list[MatchBatch], i
             b = _match(m, me, player.name)
             if b:
                 out.append(b)
-    # Sometimes the "previous" RP/rank of a match is null. The next older match on the same
-    # playlist ended where this one started, so take it from there, if it has rank data and
-    # was played shortly before (never across a long break, which could be a new season).
+    # Sometimes the "previous" RP/rank of a match is null (in practice: the first ranked match after a
+    # break). The match right before it on the same playlist ended where this one started, so take it
+    # from there if that one has rank data, wasn't long ago, and the change it implies is plausible.
     for i, b in enumerate(out):
-        # Only the match right before it: if that one has no rank data, the RP in between is unknown.
-        older = next((o for o in out[i + 1:] if o.board == b.board), None)
-        if older is None or older.extra.get("no_rank") or b.window_start is None or not (
-            timedelta(0) <= b.window_start - older.detected_at <= FILL_FROM_WITHIN
-        ):
+        if not (b.extra.get("rp_unknown") or b.extra.get("rank_unknown")):
             continue
-        if b.extra.get("rp_unknown"):
-            b.rp_before = older.rp_after
-            del b.extra["rp_unknown"]
-        if b.extra.pop("rank_unknown", False):
-            b.rank_before = older.rank_after
+        older = next((o for o in out[i + 1:] if o.board == b.board), None)
+        if older is None or older.extra.get("no_rank") or b.window_start is None:
+            continue
+        if timedelta(0) <= b.window_start - older.detected_at <= FILL_FROM_WITHIN:
+            fill_previous_rank(b, older.rp_after, older.rank_after)
     cursor = (data.get("metadata") or {}).get("next")
     return out, cursor if isinstance(cursor, int) and not isinstance(cursor, bool) else None
 

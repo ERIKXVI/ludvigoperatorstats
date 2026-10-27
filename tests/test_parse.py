@@ -216,3 +216,26 @@ def test_previous_rp_isnt_taken_from_far_back_or_from_matches_without_rank():
 
 def test_year_zero_isnt_a_season():
     assert season_id_from_code("Y0S4") is None and season_id_from_code("Y1S1") == 1
+
+
+def _null_previous(match):
+    for key in ("rankPointsPrevious", "rankPointsDelta", "rankPrevious"):
+        match["segments"][0]["stats"][key]["value"] = None
+
+
+def test_first_ranked_match_after_a_break_borrows_the_previous_rp():
+    data = load("trn_matches.json")
+    ms = data["data"]["matches"]
+    _null_previous(ms[3])  # Clubhouse, started 2024-11-10 03:50
+    ms[4]["metadata"]["timestamp"] = "2024-11-09T11:30:00.000+00:00"  # previous ranked match: 16 h earlier
+    matches, _ = parse_matches(data, PlayerInfo("Ludvig", user_id=UID))
+    assert matches[3].rp_known and (matches[3].rp_before, matches[3].rp_after) == (2300, 2300)
+
+
+def test_no_borrowing_across_a_season_reset():
+    data = load("trn_matches.json")
+    ms = data["data"]["matches"]
+    _null_previous(ms[1])  # Chalet ended at 2382 RP...
+    ms[2]["segments"][0]["stats"]["rankPoints"]["value"] = 3900  # ...the match before ended at 3900: a reset
+    matches, _ = parse_matches(data, PlayerInfo("Ludvig", user_id=UID))
+    assert not matches[1].rp_known

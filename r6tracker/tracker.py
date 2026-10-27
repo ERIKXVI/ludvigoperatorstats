@@ -29,6 +29,7 @@ from .models import (
     utcnow,
 )
 from .sources import SourceError
+from .sources.trn_parse import fill_previous_rank
 from .storage import Storage, TrackedPlayer
 
 log = logging.getLogger(__name__)
@@ -185,17 +186,28 @@ class PlaySummary:
         return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
 
     @property
+    def rated(self) -> list[MatchBatch]:
+        """Ranked matches that came with rank data."""
+        return [e for e in self.ranked_events if not e.extra.get("no_rank")]
+
+    @property
     def rp_change(self) -> int:
-        return sum(e.rp_change for e in self.ranked_events if e.rp_known)
+        return sum(e.rp_change for e in self.rated if e.rp_known)
+
+    @property
+    def rp_known(self) -> bool:
+        """Whether rp_change covers at least one match (otherwise it's unknown, not zero)."""
+        return any(e.rp_known for e in self.rated)
 
     @property
     def rank_before(self) -> int | None:
-        r = [e for e in self.ranked_events if e.rank_known]
-        return r[0].rank_before if r else None
+        """Rank before the first ranked match, if known."""
+        r = self.rated
+        return r[0].rank_before if r and r[0].rank_known else None
 
     @property
     def rank_after(self) -> int | None:
-        r = self.ranked_events
+        r = self.rated
         return r[-1].rank_after if r else None
 
 
@@ -267,8 +279,9 @@ class Tracker:
         self._catchup_until: dict[int, datetime] = {}
         self._ops_attempted_at: dict[int, datetime] = {}
         self._no_history_until: dict[int, datetime] = {}  # players whose match history isn't available
-        self._history_failing_since: dict[int, datetime] = {}
-        self._history_ref: dict[int, Snapshot] = {}  # snapshot from the last poll where history worked
+        # The snapshot up to which every match is accounted for (by history or totals); also kept in
+        # the database as accounted_at, so a long history outage can't lose matches across restarts.
+        self._history_ref: dict[int, Snapshot] = {}
         self._locks: dict[int, asyncio.Lock] = defaultdict(asyncio.Lock)
 
     async def add_player(self, name: str, platform: str = "uplay") -> tuple[TrackedPlayer, PollResult]:
@@ -316,13 +329,19 @@ class Tracker:
                 if board_id not in snap.boards and b.season_id >= season:
                     snap.boards[board_id] = b
         totals = diff_boards(comparable, snap) if comparable else []
+        season_since = self._season_seen_since(tp, snap, comparable)
 
         use_history = self.fetcher.has_matches and now >= self._no_history_until.get(tp.id, now)
-        fallback = await self._fetch_new_matches(tp, snap, result, comparable, totals) if use_history else totals
+        fallback = (
+            await self._fetch_new_matches(tp, snap, result, comparable, totals, season_since)
+            if use_history else totals
+        )
         if fallback is None:
             result.real_matches = True
         else:
             result.batches = fallback
+            if self.fetcher.has_matches and self._established(tp.id):
+                self._mark_accounted(tp.id, snap)  # the totals cover everything up to this snapshot
 
         if self.fetcher.has_operators:
             result.operator_deltas = await self._update_operators(tp, prev, snap, now, bool(result.batches),
@@ -339,7 +358,8 @@ class Tracker:
         return result
 
     async def _fetch_new_matches(
-        self, tp: TrackedPlayer, snap: Snapshot, result: PollResult, prev: Snapshot | None, totals: list[MatchBatch]
+        self, tp: TrackedPlayer, snap: Snapshot, result: PollResult, prev: Snapshot | None,
+        totals: list[MatchBatch], season_since: datetime | None,
     ) -> list[MatchBatch] | None:
         """Read match history and keep the matches we haven't stored yet (into `result`).
 
@@ -352,7 +372,8 @@ class Tracker:
         had_history = self.storage.has_real_matches(tp.id)
         established = had_history or baseline_at is not None
         if baseline_at is None and not had_history and prev is not None:
-            baseline_at = prev.taken_at  # already being tracked (from the totals): what ends from now on is news
+            # Already tracked from the totals (no history until now): what ended since tracking began is news.
+            baseline_at = (self.storage.get_player(tp.id) or tp).added_at
         first_look = baseline_at is None and not had_history
         # Matches up to the newest one counted from the totals (older version, or a fallback) are counted already.
         counted_until = self.storage.last_totals_event_at(tp.id)
@@ -386,11 +407,11 @@ class Tracker:
             if not first_look:
                 log.warning("%s played more than %d pages of matches since the last check; older ones skipped",
                             tp.name, MAX_MATCH_PAGES)
-        self._history_failing_since.pop(tp.id, None)
-        self._history_ref[tp.id] = snap
+        self.storage.set_setting(f"history_failing_since_at:{tp.id}", None)
+        self._mark_accounted(tp.id, snap)
 
         new = sorted(found.values(), key=lambda m: m.detected_at)
-        if first_look or not self.storage.get_setting(baseline_key):
+        if not self.storage.get_setting(baseline_key):
             # From now on every match that ends is news, even if this first look was empty.
             self.storage.set_setting(baseline_key, (baseline_at or snap.taken_at).isoformat())
         if first_look:
@@ -402,11 +423,31 @@ class Tracker:
         # R6 Tracker can list a match late; one that ended before we started watching is history, not news.
         result.backfilled = [m for m in new if baseline_at and m.detected_at < baseline_at]
         result.batches = [m for m in new if not (baseline_at and m.detected_at < baseline_at)]
-        same_season = prev is not None and prev.season_id == snap.season_id
         for m in result.batches:
-            if same_season and prev and m.detected_at >= prev.taken_at:
-                m.season_id = m.season_id or snap.season_id  # otherwise unknown (could span a new season)
+            # The current season, unless the match may have ended before this season was first seen.
+            if season_since is not None and m.detected_at >= season_since:
+                m.season_id = m.season_id or snap.season_id
+        self._fill_previous_rank_from_snapshot(tp, prev, snap, result.batches)
         return None
+
+    def _fill_previous_rank_from_snapshot(
+        self, tp: TrackedPlayer, prev: Snapshot | None, snap: Snapshot, batches: list[MatchBatch]
+    ) -> None:
+        """If the first new ranked match has no previous RP/rank, the last snapshot from before it
+        ended has it (same season, and consistent with the last ranked match we know)."""
+        ranked = [m for m in batches if m.board == "ranked" and not m.extra.get("no_rank")]
+        if not ranked or prev is None or prev.season_id != snap.season_id:
+            return
+        first = ranked[0]
+        board = prev.boards.get("ranked")
+        if not board or not (first.extra.get("rp_unknown") or first.extra.get("rank_unknown")):
+            return
+        if prev.taken_at > first.detected_at:
+            return
+        last = self.storage.last_ranked_event(tp.id)
+        if last is not None and last.rp_after and last.rp_after != board.rank_points:
+            return  # the profile and the match list disagree; better unknown than wrong
+        fill_previous_rank(first, board.rank_points, board.rank)
 
     def _history_failed(
         self, tp: TrackedPlayer, snap: Snapshot, totals: list[MatchBatch], error: Exception, established: bool
@@ -418,17 +459,44 @@ class Tracker:
             log.warning("No match history for %s (%s); using the totals, checking again later.", tp.name, error)
             self._no_history_until[tp.id] = now + HISTORY_RETRY
             return totals
-        since = self._history_failing_since.setdefault(tp.id, now)
+        key = f"history_failing_since_at:{tp.id}"
+        since = _when(self.storage.get_setting(key))
+        if since is None:
+            since = now
+            self.storage.set_setting(key, now.isoformat())
         if now - since < HISTORY_FAILOVER:
             return None  # a hiccup: the matches are picked up by id once history answers again
         log.warning("Match history for %s has failed since %s (%s); counting from the totals for now.",
                     tp.name, since.isoformat(timespec="minutes"), error)
         self._no_history_until[tp.id] = now + HISTORY_RETRY
-        del self._history_failing_since[tp.id]
-        ref = self._history_ref.pop(tp.id, None)
+        ref = self._history_ref.get(tp.id)
+        if ref is None:
+            accounted = _when(self.storage.get_setting(f"accounted_at:{tp.id}"))
+            ref = self.storage.snapshot_as_of(tp.id, accounted) if accounted else None
         if ref is not None and ref.sources == snap.sources:
-            return diff_boards(ref, snap)  # everything since history last worked, nothing lost in between
+            return diff_boards(ref, snap)  # everything since matches were last accounted for: nothing lost
         return totals
+
+    def _mark_accounted(self, player_id: int, snap: Snapshot) -> None:
+        self._history_ref[player_id] = snap
+        self.storage.set_setting(f"accounted_at:{player_id}", snap.taken_at.isoformat())
+
+    def _established(self, player_id: int) -> bool:
+        """Whether match history has worked for this player at some point."""
+        return self.storage.has_real_matches(player_id) or bool(
+            self.storage.get_setting(f"match_baseline_at:{player_id}")
+        )
+
+    def _season_seen_since(self, tp: TrackedPlayer, snap: Snapshot, prev: Snapshot | None) -> datetime | None:
+        """Since when we know the player's current season has been running."""
+        if not snap.season_id:
+            return None
+        if self.storage.get_setting(f"season_seen:{tp.id}") != str(snap.season_id):
+            since = prev.taken_at if prev is not None and prev.season_id == snap.season_id else snap.taken_at
+            self.storage.set_setting(f"season_seen:{tp.id}", str(snap.season_id))
+            self.storage.set_setting(f"season_seen_at:{tp.id}", since.isoformat())
+            return since
+        return _when(self.storage.get_setting(f"season_seen_at:{tp.id}"))
 
     async def _update_operators(
         self, tp: TrackedPlayer, prev: Snapshot | None, snap: Snapshot, now: datetime, new_matches: bool,
@@ -507,26 +575,35 @@ class Tracker:
         tracking began is, in full (including matches saved as history).
         """
         key = f"session_announced_at:{tp.id}"
+        start_key = f"session_announced_start_at:{tp.id}"
         current = self.storage.get_player(tp.id) or tp
-        announced_until = _when(self.storage.get_setting(key)) or self._legacy_announced(tp.id) or current.added_at
+        announced_until = _when(self.storage.get_setting(key))
+        if announced_until is None:
+            announced_until = self._legacy_announced(tp.id)
+            if announced_until is not None:
+                self.storage.set_setting(key, announced_until.isoformat())  # migrated once
+        announced_until = announced_until or current.added_at
         events = self.storage.match_events(tp.id, since=announced_until - timedelta(hours=12))
         groups = group_sessions(events, self.session_gap)
         if not groups:
             return None
-        end = groups[-1][-1].detected_at
+        start, end = groups[-1][0].detected_at, groups[-1][-1].detected_at
         if end <= announced_until or utcnow() - end < self.session_gap:
             return None
+        announced_start = _when(self.storage.get_setting(start_key))
         self.storage.set_setting(key, end.isoformat())
+        self.storage.set_setting(start_key, start.isoformat())
+        if announced_start is not None and start <= announced_start:
+            return None  # the session we already announced, grown by a match R6 Tracker listed late
         session = self._with_operators(tp, groups[-1])
         return session if session.matches >= min_matches else None
 
     def _legacy_announced(self, player_id: int) -> datetime | None:
         """Earlier versions remembered the last announced session by event id; carry that over."""
         legacy = self.storage.get_setting(f"session_announced:{player_id}")
-        if not legacy:
+        if not legacy or not legacy.isdigit():
             return None
-        events = [e for e in self.storage.match_events(player_id) if e.id is not None and e.id <= int(legacy)]
-        return max((e.detected_at for e in events), default=None)
+        return self.storage.last_event_at_upto(player_id, int(legacy))
 
     def daily(self, tp: TrackedPlayer, days: int, tz: tzinfo) -> list[DayStats]:
         today = datetime.now(tz).date()
